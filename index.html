@@ -1,2205 +1,1116 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Saidul CloudOS — High-Capacity IndexedDB Drive & Workspace</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CloudExplorer — Online Notes & Knowledge File System</title>
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Segoe UI"', 'Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'Consolas', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
 
-    <!-- Google Fonts: Inter & JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    <!-- Font Awesome 6 Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Marked.js for Markdown Rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        carbon: {
-                            950: '#09090b',
-                            900: '#0f0f12',
-                            850: '#141418',
-                            800: '#1c1c22',
-                            700: '#27272f'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+  <style>
+    /* Sleek Windows 11 Custom Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.55); }
 
-    <style>
-        /* Ultra-minimal scrollbars */
-        ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(161, 161, 170, 0.25);
-            border-radius: 9999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(161, 161, 170, 0.45);
-        }
-
-        /* Hairline glass surfaces */
-        .glass-panel {
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
-
-        /* Subtle Drag-and-Drop highlight */
-        .dropzone-active {
-            border-color: #6366f1 !important;
-            background-color: rgba(99, 102, 241, 0.06) !important;
-        }
-
-        /* Smooth micro-interactions */
-        .row-hover {
-            transition: background-color 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
-        }
-        
-        /* Hide number input arrows */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-        }
-    </style>
+    /* Markdown Typography Styling */
+    .markdown-body h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid rgba(148, 163, 184, 0.2); }
+    .markdown-body h2 { font-size: 1.35rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem; color: #38bdf8; }
+    .markdown-body h3 { font-size: 1.1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.4rem; }
+    .markdown-body p { margin-bottom: 0.85rem; line-height: 1.7; }
+    .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.85rem; }
+    .markdown-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.85rem; }
+    .markdown-body code { background: rgba(15, 23, 42, 0.6); color: #38bdf8; padding: 0.15rem 0.4rem; border-radius: 0.3rem; font-family: monospace; font-size: 0.9em; }
+    .light .markdown-body code { background: #f1f5f9; color: #0284c7; }
+    .markdown-body pre { background: #090d16; color: #e2e8f0; padding: 1rem; border-radius: 0.6rem; overflow-x: auto; margin-bottom: 1rem; border: 1px solid rgba(148, 163, 184, 0.15); }
+    .markdown-body blockquote { border-left: 4px solid #38bdf8; padding-left: 1rem; opacity: 0.85; font-style: italic; margin: 1rem 0; }
+    .markdown-body table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    .markdown-body th, .markdown-body td { border: 1px solid rgba(148, 163, 184, 0.25); padding: 0.55rem 0.75rem; text-align: left; }
+    .markdown-body th { background: rgba(56, 189, 248, 0.1); font-weight: 600; }
+  </style>
 </head>
-<body class="bg-[#fafafa] dark:bg-carbon-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased selection:bg-indigo-500 selection:text-white h-screen flex flex-col overflow-hidden select-none">
 
-    <!-- ==========================================================================
-         GLOBAL DRAG-AND-DROP OVERLAY (Triggers when dragging files onto window)
-         ========================================================================== -->
-    <div id="global-drop-overlay" class="fixed inset-0 z-50 hidden bg-zinc-950/80 glass-panel flex items-center justify-center p-6 pointer-events-none">
-        <div class="border-2 border-dashed border-indigo-500 rounded-3xl max-w-lg w-full p-12 text-center space-y-4 bg-carbon-900/90 shadow-2xl">
-            <div class="w-16 h-16 rounded-2xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center mx-auto text-2xl">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-            </div>
-            <h3 class="text-xl font-semibold text-white tracking-tight">Drop files to store in IndexedDB</h3>
-            <p class="text-xs text-zinc-400 font-mono">Native binary Blob storage • Zero compression loss • Multi-gigabyte capacity</p>
-        </div>
+<body class="bg-slate-100 dark:bg-[#0b0f19] text-slate-800 dark:text-slate-100 h-screen flex flex-col overflow-hidden select-none font-sans transition-colors duration-200">
+
+  <!-- ================= WINDOWS 11 TITLE BAR ================= -->
+  <header class="h-10 bg-slate-200/90 dark:bg-[#111827]/90 backdrop-blur border-b border-slate-300 dark:border-slate-800 flex items-center justify-between px-3 shrink-0">
+    <div class="flex items-center space-x-2.5">
+      <button onclick="toggleMobileSidebar()" class="md:hidden p-1.5 rounded hover:bg-slate-300 dark:hover:bg-slate-800">
+        <i class="fa-solid fa-bars text-sm"></i>
+      </button>
+      <div class="w-6 h-6 rounded bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white shadow-sm">
+        <i class="fa-solid fa-folder-tree text-xs"></i>
+      </div>
+      <span class="text-xs font-semibold tracking-wide">CloudExplorer — Live Notes File System</span>
+      <span id="cloud-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span id="cloud-status-text">Cloud Ready</span>
+      </span>
     </div>
 
-    <!-- ==========================================================================
-         MAIN WORKSPACE SHELL (SIDEBAR + MAIN VIEWPORT)
-         ========================================================================== -->
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex items-center space-x-2">
+      <!-- Role Mode Badge & Switcher -->
+      <div id="role-indicator" class="text-xs px-2.5 py-1 rounded-md bg-slate-300/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+        <i class="fa-solid fa-eye text-[11px] text-sky-400"></i>
+        <span>Public View</span>
+      </div>
 
-        <!-- ======================================================================
-             LEFT SIDEBAR (Desktop Collapsible Navigation & Hardware Storage Quota)
-             ====================================================================== -->
-        <aside id="app-sidebar" class="hidden md:flex flex-col w-64 bg-white dark:bg-carbon-900 border-r border-zinc-200/80 dark:border-zinc-800/80 shrink-0 transition-all duration-200 select-none">
-            
-            <!-- Brand Header -->
-            <div class="h-14 px-4 border-b border-zinc-200/80 dark:border-zinc-800/80 flex items-center justify-between">
-                <div class="flex items-center space-x-2.5 min-w-0">
-                    <div class="w-7 h-7 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 flex items-center justify-center font-mono font-bold text-xs shadow-sm shrink-0">
-                        S
-                    </div>
-                    <div class="truncate">
-                        <div class="flex items-center space-x-1.5">
-                            <span class="font-semibold text-sm tracking-tight text-zinc-900 dark:text-white">Saidul CloudOS</span>
-                            <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-medium bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">IDB v4</span>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="CloudApp.openCommandPalette()" class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/70 transition text-xs" title="Command Palette (Ctrl+K)">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </button>
-            </div>
+      <button id="btn-admin-toggle" onclick="handleAdminToggle()" class="text-xs px-2.5 py-1 rounded-md bg-sky-600 hover:bg-sky-500 text-white font-medium transition flex items-center gap-1.5 shadow-sm">
+        <i class="fa-solid fa-lock text-[11px]" id="admin-lock-icon"></i>
+        <span id="admin-btn-text">Admin Login</span>
+      </button>
 
-            <!-- Quick Upload CTA -->
-            <div class="p-3">
-                <button onclick="document.getElementById('hidden-file-input').click()" class="w-full py-2 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-950 text-xs font-semibold transition flex items-center justify-center space-x-2 shadow-sm">
-                    <i class="fa-solid fa-plus text-[11px]"></i>
-                    <span>Upload Files to Drive</span>
-                </button>
-                <input type="file" id="hidden-file-input" multiple onchange="CloudApp.handleFilesSelected(this.files)" class="hidden">
-            </div>
+      <button onclick="openCloudModal()" title="Cloud Database Config" class="p-1.5 rounded-md hover:bg-slate-300 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition">
+        <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
+      </button>
 
-            <!-- Primary Workspace Navigation -->
-            <nav class="flex-1 px-3 py-1 space-y-6 overflow-y-auto">
-                <div class="space-y-0.5">
-                    <div class="px-2.5 pb-1.5 text-[10px] font-mono uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Workspace</div>
-                    
-                    <button onclick="CloudApp.switchView('overview')" data-nav="overview" class="nav-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition">
-                        <span class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-Grip w-4 text-center text-zinc-400"></i>
-                            <span>Command Overview</span>
-                        </span>
-                    </button>
+      <button onclick="toggleTheme()" title="Toggle Dark/Light Theme" class="p-1.5 rounded-md hover:bg-slate-300 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition">
+        <i id="theme-icon" class="fa-solid fa-sun text-xs text-amber-400"></i>
+      </button>
+    </div>
+  </header>
 
-                    <button onclick="CloudApp.switchView('drive')" data-nav="drive" class="nav-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition">
-                        <span class="flex items-center space-x-2.5">
-                            <i class="fa-regular fa-hard-drive w-4 text-center text-zinc-400"></i>
-                            <span>Cloud Drive Vault</span>
-                        </span>
-                        <span id="nav-badge-files" class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">0</span>
-                    </button>
+  <!-- ================= WINDOWS 11 COMMAND RIBBON ================= -->
+  <div class="h-12 bg-white/80 dark:bg-[#151d2e]/90 border-b border-slate-200 dark:border-slate-800/80 px-3 flex items-center justify-between gap-2 shrink-0 overflow-x-auto">
+    <!-- Left Action Controls (Admin vs Public) -->
+    <div class="flex items-center space-x-1.5">
+      <button id="cmd-new-folder" onclick="openItemModal('folder')" class="hidden items-center space-x-1.5 px-3 py-1.5 rounded-md bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/20 text-xs font-medium transition">
+        <i class="fa-solid fa-folder-plus text-amber-400"></i>
+        <span>New Folder</span>
+      </button>
 
-                    <button onclick="CloudApp.switchView('notes')" data-nav="notes" class="nav-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition">
-                        <span class="flex items-center space-x-2.5">
-                            <i class="fa-regular fa-file-lines w-4 text-center text-zinc-400"></i>
-                            <span>Notes Studio</span>
-                        </span>
-                        <span id="nav-badge-notes" class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">0</span>
-                    </button>
+      <button id="cmd-new-note" onclick="openItemModal('note')" class="hidden items-center space-x-1.5 px-3 py-1.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-medium transition">
+        <i class="fa-solid fa-file-circle-plus text-emerald-400"></i>
+        <span>New Note</span>
+      </button>
 
-                    <button onclick="CloudApp.switchView('tasks')" data-nav="tasks" class="nav-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition">
-                        <span class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-check-double w-4 text-center text-zinc-400"></i>
-                            <span>Execution & Focus</span>
-                        </span>
-                        <span id="nav-badge-tasks" class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">0</span>
-                    </button>
-                </div>
+      <label id="cmd-upload-md" class="hidden items-center space-x-1.5 px-3 py-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-xs font-medium cursor-pointer transition">
+        <i class="fa-solid fa-file-arrow-up text-indigo-400"></i>
+        <span>Upload .md/.txt</span>
+        <input type="file" accept=".md,.txt" class="hidden" onchange="handleFileUpload(event)" />
+      </label>
 
-                <!-- Drive Quick Partitions -->
-                <div class="space-y-0.5">
-                    <div class="px-2.5 pb-1.5 text-[10px] font-mono uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Drive Partitions</div>
-                    <button onclick="CloudApp.filterDriveCategory('All')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition">
-                        <span class="flex items-center space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span><span>All Binary Files</span></span>
-                    </button>
-                    <button onclick="CloudApp.filterDriveCategory('Study')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition">
-                        <span class="flex items-center space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span><span>Study & PDFs</span></span>
-                    </button>
-                    <button onclick="CloudApp.filterDriveCategory('Code')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition">
-                        <span class="flex items-center space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>Code & Scripts</span></span>
-                    </button>
-                    <button onclick="CloudApp.filterDriveCategory('Media')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition">
-                        <span class="flex items-center space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span><span>Images & Media</span></span>
-                    </button>
-                    <button onclick="CloudApp.filterDriveCategory('Personal')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition">
-                        <span class="flex items-center space-x-2"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span><span>Personal Vault</span></span>
-                    </button>
-                </div>
-            </nav>
+      <div id="admin-divider" class="hidden h-5 w-[1px] bg-slate-300 dark:bg-slate-700 mx-1"></div>
 
-            <!-- Hardware Disk Storage Telemetry Widget (IndexedDB Quota) -->
-            <div class="p-3 m-3 rounded-xl bg-zinc-50 dark:bg-carbon-850 border border-zinc-200/80 dark:border-zinc-800/90 space-y-2.5">
-                <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        IndexedDB Disk
-                    </span>
-                    <button onclick="CloudApp.requestPersistentStorage()" id="persist-badge-btn" class="text-[10px] font-mono text-indigo-500 hover:underline" title="Request hardware-level persistent storage lock">
-                        Lock Quota
-                    </button>
-                </div>
+      <button onclick="syncFromCloud(true)" class="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-xs transition" title="Refresh from Cloud Database">
+        <i class="fa-solid fa-arrows-rotate text-sky-400"></i>
+        <span class="hidden sm:inline">Sync Cloud</span>
+      </button>
 
-                <div>
-                    <div class="flex items-baseline justify-between text-xs font-mono">
-                        <span id="sidebar-used-bytes" class="font-semibold text-zinc-900 dark:text-white">0 KB</span>
-                        <span id="sidebar-quota-bytes" class="text-[10px] text-zinc-400">of -- GB Free</span>
-                    </div>
-                    <div class="w-full h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden mt-1.5">
-                        <div id="sidebar-storage-bar" class="h-full bg-indigo-500 transition-all duration-300" style="width: 1%"></div>
-                    </div>
-                </div>
-
-                <div class="pt-1 border-t border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between text-[10px] text-zinc-400 font-mono">
-                    <span>Engine: Native Blob</span>
-                    <button onclick="CloudApp.openBackupModal()" class="text-zinc-600 dark:text-zinc-300 hover:underline">Backup DB</button>
-                </div>
-            </div>
-        </aside>
-
-        <!-- ======================================================================
-             RIGHT MAIN VIEWPORT (TOPBAR + DYNAMIC MODULE VIEWS)
-             ====================================================================== -->
-        <div class="flex-1 flex flex-col min-w-0 bg-[#fafafa] dark:bg-carbon-950 overflow-hidden">
-
-            <!-- Minimal Top Header Bar -->
-            <header class="h-14 px-4 sm:px-6 bg-white/80 dark:bg-carbon-900/80 glass-panel border-b border-zinc-200/80 dark:border-zinc-800/80 flex items-center justify-between gap-3 shrink-0 z-20">
-                
-                <!-- Left Breadcrumb & Mobile Brand -->
-                <div class="flex items-center space-x-3 min-w-0">
-                    <button onclick="CloudApp.toggleSidebar()" class="hidden md:flex w-8 h-8 rounded-lg items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" title="Toggle Sidebar">
-                        <i class="fa-solid fa-table-columns text-xs"></i>
-                    </button>
-                    <div class="flex items-center space-x-2 text-xs sm:text-sm">
-                        <span class="font-semibold text-zinc-400 dark:text-zinc-500 hidden sm:inline">SaidulCloudDB</span>
-                        <span class="text-zinc-300 dark:text-zinc-700 hidden sm:inline">/</span>
-                        <span id="topbar-view-title" class="font-semibold text-zinc-900 dark:text-white truncate">Command Overview</span>
-                    </div>
-                </div>
-
-                <!-- Center Spotlight Search Trigger (Ctrl+K) -->
-                <button onclick="CloudApp.openCommandPalette()" class="flex items-center justify-between w-48 sm:w-80 px-3 py-1.5 rounded-xl bg-zinc-100/90 dark:bg-carbon-850 border border-zinc-200/80 dark:border-zinc-800 text-xs text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700 transition">
-                    <span class="flex items-center space-x-2 truncate">
-                        <i class="fa-solid fa-magnifying-glass text-[11px]"></i>
-                        <span class="truncate">Search files, notes, commands...</span>
-                    </span>
-                    <kbd class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-carbon-900 text-zinc-500 rounded border border-zinc-200 dark:border-zinc-700">Ctrl K</kbd>
-                </button>
-
-                <!-- Right Utility Controls -->
-                <div class="flex items-center space-x-2 shrink-0">
-                    <!-- Active Pomodoro Mini Pill -->
-                    <button onclick="CloudApp.switchView('tasks')" id="topbar-timer-pill" class="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-carbon-850 border border-zinc-200/80 dark:border-zinc-800 text-xs font-mono text-zinc-600 dark:text-zinc-300 hover:border-indigo-500/40 transition">
-                        <span id="topbar-timer-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
-                        <span id="topbar-timer-display">25:00</span>
-                    </button>
-
-                    <!-- Create Text/Code File Modal Button -->
-                    <button onclick="CloudApp.openCreateFileModal()" class="p-2 rounded-lg bg-zinc-100 dark:bg-carbon-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-800 text-xs transition" title="Create New Text/Code File">
-                        <i class="fa-solid fa-file-circle-plus"></i>
-                    </button>
-
-                    <!-- Database Backup Modal Button -->
-                    <button onclick="CloudApp.openBackupModal()" class="p-2 rounded-lg bg-zinc-100 dark:bg-carbon-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-800 text-xs transition" title="Database Telemetry & Backup">
-                        <i class="fa-solid fa-database"></i>
-                    </button>
-
-                    <!-- Theme Switcher -->
-                    <button onclick="CloudApp.toggleTheme()" class="p-2 rounded-lg bg-zinc-100 dark:bg-carbon-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-800 text-xs transition" title="Toggle Crisp Light / Obsidian Dark Theme">
-                        <i id="theme-icon" class="fa-solid fa-sun text-amber-400"></i>
-                    </button>
-                </div>
-            </header>
-
-            <!-- ==================================================================
-                 SCROLLABLE CONTENT AREA (CONTAINS ALL 4 VIEWS)
-                 ================================================================== -->
-            <main class="flex-1 overflow-y-auto pb-20 md:pb-8">
-
-                <!-- ==============================================================
-                     VIEW 1: COMMAND OVERVIEW (DASHBOARD & STORAGE TELEMETRY)
-                     ============================================================== -->
-                <section id="view-overview" class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-                    
-                    <!-- Top Welcome & Live Hardware Telemetry Strip -->
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                        
-                        <!-- Welcome & Quick Actions Card (7 Cols) -->
-                        <div class="lg:col-span-7 bg-white dark:bg-carbon-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-6 flex flex-col justify-between space-y-5 shadow-sm">
-                            <div class="space-y-2">
-                                <div class="inline-flex items-center space-x-2 text-[11px] font-mono text-indigo-500">
-                                    <i class="fa-solid fa-bolt"></i>
-                                    <span id="overview-clock">ONLINE • LOCAL HARDWARE ENGINE</span>
-                                </div>
-                                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-                                    Personal Cloud Drive & Knowledge Studio
-                                </h1>
-                                <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                                    Engineered with native <code class="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono text-[11px] text-indigo-400">IndexedDB</code> binary storage. Upload large PDFs, high-res images, media, or code files directly to your disk with zero cloud subscription fees.
-                                </p>
-                            </div>
-
-                            <div class="flex flex-wrap items-center gap-2.5 pt-1">
-                                <button onclick="document.getElementById('hidden-file-input').click()" class="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-950 text-xs font-semibold transition flex items-center space-x-2">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <span>Upload Files</span>
-                                </button>
-                                <button onclick="CloudApp.createNewNoteAndOpen()" class="px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-carbon-850 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-800 text-xs font-medium transition flex items-center space-x-2">
-                                    <i class="fa-solid fa-pen-nib text-indigo-500"></i>
-                                    <span>New Studio Note</span>
-                                </button>
-                                <button onclick="CloudApp.openCreateFileModal()" class="px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-carbon-850 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-800 text-xs font-medium transition flex items-center space-x-2">
-                                    <i class="fa-solid fa-code text-emerald-500"></i>
-                                    <span>New Code / Text File</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- High-Capacity Disk Telemetry Widget (5 Cols) -->
-                        <div class="lg:col-span-5 bg-white dark:bg-carbon-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-6 flex flex-col justify-between space-y-4 shadow-sm">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Hardware Quota Estimate</span>
-                                    <h2 class="text-sm font-semibold text-zinc-900 dark:text-white mt-0.5">IndexedDB Binary Capacity</h2>
-                                </div>
-                                <span class="px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-500 font-mono text-[10px] font-semibold border border-emerald-500/20">
-                                    UNTHROTTLED
-                                </span>
-                            </div>
-
-                            <!-- Storage Metrics -->
-                            <div class="grid grid-cols-2 gap-3 pt-1">
-                                <div class="p-3 rounded-xl bg-zinc-50 dark:bg-carbon-850 border border-zinc-200/60 dark:border-zinc-800">
-                                    <div class="text-[10px] font-mono text-zinc-400">VAULT APP USAGE</div>
-                                    <div id="overview-vault-used" class="text-lg font-bold font-mono text-zinc-900 dark:text-white mt-0.5">0 KB</div>
-                                    <div id="overview-files-count" class="text-[11px] text-zinc-500 mt-0.5">0 Binary Blobs</div>
-                                </div>
-                                <div class="p-3 rounded-xl bg-zinc-50 dark:bg-carbon-850 border border-zinc-200/60 dark:border-zinc-800">
-                                    <div class="text-[10px] font-mono text-zinc-400">AVAILABLE DISK QUOTA</div>
-                                    <div id="overview-disk-quota" class="text-lg font-bold font-mono text-indigo-500 mt-0.5">-- GB</div>
-                                    <div class="text-[11px] text-zinc-500 mt-0.5">Browser Hardware Pool</div>
-                                </div>
-                            </div>
-
-                            <!-- Storage Breakdown Bar -->
-                            <div class="space-y-1.5">
-                                <div class="flex justify-between text-[11px] font-mono text-zinc-400">
-                                    <span>Files, Notes & Tasks Stored Locally</span>
-                                    <span id="overview-quota-pct">0.01% used</span>
-                                </div>
-                                <div class="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex">
-                                    <div id="bar-segment-files" class="h-full bg-indigo-500 transition-all" style="width: 4%"></div>
-                                    <div id="bar-segment-notes" class="h-full bg-emerald-500 transition-all" style="width: 1%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Instant Drag & Drop Uploader Strip -->
-                    <div 
-                        id="overview-dropzone"
-                        onclick="document.getElementById('hidden-file-input').click()"
-                        class="cursor-pointer group bg-white dark:bg-carbon-900 border border-dashed border-zinc-300 dark:border-zinc-800 hover:border-indigo-500 dark:hover:border-indigo-500 rounded-2xl p-5 transition flex flex-col sm:flex-row items-center justify-between gap-4"
-                    >
-                        <div class="flex items-center space-x-4 text-center sm:text-left">
-                            <div class="w-11 h-11 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center text-lg group-hover:scale-105 transition shrink-0 mx-auto sm:mx-0">
-                                <i class="fa-solid fa-cloud-arrow-up"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-white">Drag & drop any files here to store directly in IndexedDB</h3>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Supports Images, PDFs, Videos, Audio, ZIP archives, Python/JS/HTML code, and Markdown documents</p>
-                            </div>
-                        </div>
-                        <span class="px-3.5 py-1.5 rounded-xl bg-zinc-100 dark:bg-carbon-850 text-zinc-700 dark:text-zinc-300 text-xs font-mono shrink-0 border border-zinc-200 dark:border-zinc-800">
-                            Browse Disk
-                        </span>
-                    </div>
-
-                    <!-- 3-Column Recent Workspace Activity (Recent Files, Pinned Notes, Urgent Tasks) -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                        
-                        <!-- Recent Drive Files -->
-                        <div class="bg-white dark:bg-carbon-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-sm">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-xs font-mono uppercase tracking-wider text-zinc-400 font-semibold">Recent Drive Files</h3>
-                                <button onclick="CloudApp.switchView('drive')" class="text-xs text-indigo-500 hover:underline font-medium">Open Drive →</button>
-                            </div>
-                            <div id="overview-recent-files" class="space-y-2 flex-1">
-                                <!-- Populated by JS -->
-                            </div>
-                        </div>
-
-                        <!-- Recent Studio Notes -->
-                        <div class="bg-white dark:bg-carbon-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-sm">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-xs font-mono uppercase tracking-wider text-zinc-400 font-semibold">Pinned & Recent Notes</h3>
-                                <button onclick="CloudApp.switchView('notes')" class="text-xs text-indigo-500 hover:underline font-medium">Open Studio →</button>
-                            </div>
-                            <div id="overview-recent-notes" class="space-y-2 flex-1">
-                                <!-- Populated by JS -->
-                            </div>
-                        </div>
-
-                        <!-- Priority Execution Tasks -->
-                        <div class="bg-white dark:bg-carbon-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-sm">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-xs font-mono uppercase tracking-wider text-zinc-400 font-semibold">Priority Execution Queue</h3>
-                                <button onclick="CloudApp.switchView('tasks')" class="text-xs text-indigo-500 hover:underline font-medium">Focus Matrix →</button>
-                            </div>
-                            <div id="overview-priority-tasks" class="space-y-2 flex-1">
-                                <!-- Populated by JS -->
-                            </div>
-                        </div>
-
-                    </div>
-                </section>
-
-                <!-- ==============================================================
-                     VIEW 2: CLOUD DRIVE (INDEXEDDB BINARY FILES VAULT)
-                     ============================================================== -->
-                <section id="view-drive" class="hidden max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-5">
-                    
-                    <!-- Drive Header & Upload Bar -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200/80 dark:border-zinc-800/80">
-                        <div>
-                            <div class="flex items-center space-x-2">
-                                <h2 class="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white tracking-tight">Cloud Drive Vault</h2>
-                                <span id="drive-total-size-pill" class="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-carbon-850 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-500">0 KB</span>
-                            </div>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Binary files stored persistently inside <code class="font-mono">SaidulCloudDB.files</code> object store</p>
-                        </div>
-
-                        <div class="flex items-center space-x-2">
-                            <button onclick="CloudApp.openCreateFileModal()" class="px-3 py-2 rounded-xl bg-white dark:bg-carbon-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 text-xs font-medium text-zinc-700 dark:text-zinc-200 transition flex items-center space-x-1.5">
-                                <i class="fa-solid fa-file-code text-emerald-500"></i>
-                                <span>New Text/Code</span>
-                            </button>
-                            <button onclick="document.getElementById('hidden-file-input').click()" class="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-950 text-xs font-semibold transition flex items-center space-x-2 shadow-sm">
-                                <i class="fa-solid fa-cloud-arrow-up"></i>
-                                <span>Upload Files</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Filter, Search, Sort & Layout Toolbar -->
-                    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-                        <!-- Category Filter Pills -->
-                        <div id="drive-category-pills" class="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
-                            <!-- Populated by JS -->
-                        </div>
-
-                        <!-- Search, Sort & Grid/Table View Toggle -->
-                        <div class="flex items-center space-x-2 shrink-0">
-                            <div class="relative flex-1 sm:w-56">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-[11px]"></i>
-                                <input 
-                                    type="text" 
-                                    id="drive-search-input" 
-                                    oninput="CloudApp.renderDrive()" 
-                                    placeholder="Filter files in drive..." 
-                                    class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white dark:bg-carbon-900 border border-zinc-200 dark:border-zinc-800 text-xs focus:outline-none focus:border-indigo-500"
-                                >
-                            </div>
-
-                            <select id="drive-sort-select" onchange="CloudApp.renderDrive()" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-carbon-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-300 focus:outline-none">
-                                <option value="date-desc">Newest First</option>
-                                <option value="size-desc">Largest Size</option>
-                                <option value="name-asc">Name A–Z</option>
-                            </select>
-
-                            <div class="flex items-center bg-white dark:bg-carbon-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-0.5">
-                                <button onclick="CloudApp.setDriveViewMode('grid')" id="drive-view-grid-btn" class="px-2.5 py-1 rounded-lg text-xs transition" title="Grid View">
-                                    <i class="fa-solid fa-border-all"></i>
-                                </button>
-                                <button onclick="CloudApp.setDriveViewMode('table')" id="drive-view-table-btn" class="px-2.5 py-1 rounded-lg text-xs transition" title="Linear Table View">
-                                    <i class="fa-solid fa-list"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Drive Dropzone Banner -->
-                    <div 
-                        id="drive-dropzone"
-                        onclick="document.getElementById('hidden-file-input').click()"
-                        class="cursor-pointer border border-dashed border-zinc-300 dark:border-zinc-800 hover:border-indigo-500 dark:hover:border-indigo-500 rounded-2xl p-4 bg-white/50 dark:bg-carbon-900/40 flex items-center justify-between transition"
-                    >
-                        <div class="flex items-center space-x-3">
-                            <i class="fa-solid fa-folder-plus text-indigo-500 text-base"></i>
-                            <span class="text-xs text-zinc-600 dark:text-zinc-400">Drop files anywhere or click to upload into <strong id="drive-active-folder-label" class="text-zinc-900 dark:text-white">All Files</strong> partition</span>
-                        </div>
-                        <span class="text-[11px] font-mono text-zinc-400 hidden sm:inline">Max file size: Hardware Disk Limit</span>
-                    </div>
-
-                    <!-- Drive Files Container (Renders either Grid or Table) -->
-                    <div id="drive-files-container">
-                        <!-- Populated by JS -->
-                    </div>
-                </section>
-
-                <!-- ==============================================================
-                     VIEW 3: MINIMALIST NOTES & KNOWLEDGE STUDIO
-                     ============================================================== -->
-                <section id="view-notes" class="hidden h-[calc(100vh-3.5rem)] flex flex-col md:flex-row overflow-hidden">
-                    
-                    <!-- Left Notes List Pane -->
-                    <div class="w-full md:w-80 border-b md:border-b-0 md:border-r border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-carbon-900 flex flex-col shrink-0 max-h-64 md:max-h-full">
-                        <div class="p-3.5 border-b border-zinc-200/80 dark:border-zinc-800/80 space-y-2.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-semibold text-zinc-900 dark:text-white">Knowledge Studio</span>
-                                <button onclick="CloudApp.createNewNote()" class="px-2.5 py-1 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 text-[11px] font-semibold flex items-center space-x-1 transition">
-                                    <i class="fa-solid fa-plus text-[10px]"></i>
-                                    <span>New Note</span>
-                                </button>
-                            </div>
-                            <div class="relative">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-[11px]"></i>
-                                <input 
-                                    type="text" 
-                                    id="notes-search-input" 
-                                    oninput="CloudApp.renderNotesList()" 
-                                    placeholder="Search studio notes..." 
-                                    class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-carbon-850 border border-zinc-200/80 dark:border-zinc-800 text-xs focus:outline-none focus:border-indigo-500"
-                                >
-                            </div>
-                        </div>
-
-                        <div id="notes-sidebar-list" class="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-
-                    <!-- Right Distraction-Free Note Editor -->
-                    <div class="flex-1 flex flex-col bg-[#fafafa] dark:bg-carbon-950 overflow-hidden">
-                        
-                        <!-- Note Editor Toolbar -->
-                        <div class="h-12 px-4 sm:px-6 border-b border-zinc-200/80 dark:border-zinc-800/80 flex items-center justify-between gap-2 bg-white/50 dark:bg-carbon-900/50 shrink-0">
-                            <div class="flex items-center space-x-2">
-                                <select id="active-note-category" onchange="CloudApp.queueNoteAutoSave()" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-carbon-850 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 focus:outline-none">
-                                    <option value="Computer Science">Computer Science</option>
-                                    <option value="Mathematics">Mathematics</option>
-                                    <option value="Science">Science</option>
-                                    <option value="Architecture">Architecture & AI</option>
-                                    <option value="Personal">Personal Vault</option>
-                                </select>
-
-                                <button onclick="CloudApp.toggleActiveNotePin()" id="active-note-pin-btn" class="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition" title="Pin Note to Top">
-                                    <i class="fa-solid fa-thumbtack"></i>
-                                </button>
-                            </div>
-
-                            <div class="flex items-center space-x-3 text-[11px] font-mono text-zinc-400">
-                                <span id="note-metrics-display">0 words • 1 min read</span>
-                                <span id="note-autosave-indicator" class="text-emerald-500 flex items-center gap-1">
-                                    <i class="fa-solid fa-check text-[10px]"></i>Saved
-                                </span>
-                                <button onclick="CloudApp.exportActiveNoteAsFile()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-white" title="Save Note as .MD File in Cloud Drive">
-                                    <i class="fa-solid fa-hard-drive"></i>
-                                </button>
-                                <button onclick="CloudApp.deleteActiveNote()" class="text-zinc-400 hover:text-rose-500 transition" title="Delete Note">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Editor Canvas -->
-                        <div class="flex-1 overflow-y-auto px-4 sm:px-10 md:px-16 py-6 sm:py-8">
-                            <div class="max-w-3xl mx-auto h-full flex flex-col space-y-4">
-                                <input 
-                                    type="text" 
-                                    id="active-note-title" 
-                                    oninput="CloudApp.queueNoteAutoSave()"
-                                    placeholder="Untitled Studio Note..." 
-                                    class="w-full bg-transparent text-xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white focus:outline-none placeholder-zinc-300 dark:placeholder-zinc-700 select-text"
-                                >
-                                <textarea 
-                                    id="active-note-body" 
-                                    oninput="CloudApp.queueNoteAutoSave()"
-                                    placeholder="Write clean markdown, study notes, system architecture, or ideas... Automatically persisted to IndexedDB." 
-                                    class="w-full flex-1 bg-transparent text-sm sm:text-base text-zinc-700 dark:text-zinc-300 leading-relaxed focus:outline-none resize-none font-sans select-text min-h-[360px]"
-                                ></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ==============================================================
-                     VIEW 4: EXECUTION & FOCUS MATRIX (TASKS + POMODORO TIMER)
-                     ============================================================== -->
-                <section id="view-tasks" class="hidden max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                        
-                        <!-- LEFT 8 COLS: LINEAR-STYLE TASK EXECUTION QUEUE -->
-                        <div class="lg:col-span-8 space-y-4">
-                            <div class="bg-white dark:bg-carbon-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-5 space-y-4 shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h2 class="text-base sm:text-lg font-bold text-zinc-900 dark:text-white">Execution Matrix</h2>
-                                        <p class="text-xs text-zinc-500 dark:text-zinc-400">High-velocity task tracking persisted in IndexedDB</p>
-                                    </div>
-                                    <div class="flex items-center space-x-1 bg-zinc-100 dark:bg-carbon-850 p-1 rounded-xl">
-                                        <button onclick="CloudApp.setTaskFilter('all')" id="task-filter-all" class="px-2.5 py-1 rounded-lg text-xs font-medium transition">All</button>
-                                        <button onclick="CloudApp.setTaskFilter('pending')" id="task-filter-pending" class="px-2.5 py-1 rounded-lg text-xs font-medium transition">Active</button>
-                                        <button onclick="CloudApp.setTaskFilter('done')" id="task-filter-done" class="px-2.5 py-1 rounded-lg text-xs font-medium transition">Completed</button>
-                                    </div>
-                                </div>
-
-                                <!-- Quick Task Creation Row -->
-                                <form onsubmit="event.preventDefault(); CloudApp.addTaskFromForm();" class="flex flex-col sm:flex-row gap-2">
-                                    <input 
-                                        type="text" 
-                                        id="new-task-title" 
-                                        required
-                                        placeholder="Add a new deliverable or study milestone (Press Enter)..." 
-                                        class="flex-1 px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-carbon-850 border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm focus:outline-none focus:border-indigo-500 select-text"
-                                    >
-                                    <div class="flex items-center gap-2">
-                                        <select id="new-task-priority" class="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-carbon-850 border border-zinc-200 dark:border-zinc-800 text-xs font-medium focus:outline-none">
-                                            <option value="Urgent">🔥 Urgent</option>
-                                            <option value="High" selected>⚡ High</option>
-                                            <option value="Normal">● Normal</option>
-                                            <option value="Low">○ Low</option>
-                                        </select>
-                                        <button type="submit" class="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-950 text-xs font-semibold shrink-0 transition">
-                                            Add Task
-                                        </button>
-                                    </div>
-                                </form>
-
-                                <!-- Task List -->
-                                <div id="tasks-list-container" class="divide-y divide-zinc-100 dark:divide-zinc-800/70 pt-1">
-                                    <!-- Populated by JS -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- RIGHT 4 COLS: MINIMAL FOCUS POMODORO STUDIO -->
-                        <div class="lg:col-span-4 bg-white dark:bg-carbon-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-6 space-y-5 shadow-sm sticky top-6">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-[10px] font-mono uppercase tracking-wider text-indigo-500 font-semibold">Deep Work Engine</span>
-                                    <h3 class="text-base font-bold text-zinc-900 dark:text-white mt-0.5">Focus Timer</h3>
-                                </div>
-                                <span id="pomodoro-sessions-badge" class="px-2 py-0.5 rounded bg-zinc-100 dark:bg-carbon-850 text-[11px] font-mono text-zinc-500">0 Sessions</span>
-                            </div>
-
-                            <!-- Timer Display -->
-                            <div class="py-6 rounded-2xl bg-zinc-50 dark:bg-carbon-850 border border-zinc-200/60 dark:border-zinc-800 text-center space-y-2">
-                                <div id="pomodoro-clock-display" class="font-mono text-4xl sm:text-5xl font-bold tracking-tight text-zinc-900 dark:text-white">
-                                    25:00
-                                </div>
-                                <p id="pomodoro-mode-label" class="text-[11px] font-mono uppercase tracking-widest text-zinc-400">25m Deep Focus</p>
-                            </div>
-
-                            <!-- Duration Presets -->
-                            <div class="grid grid-cols-3 gap-2">
-                                <button onclick="CloudApp.setPomodoroPreset(25, '25m Deep Focus')" class="py-1.5 rounded-xl bg-zinc-100 dark:bg-carbon-850 hover:border-indigo-500 border border-transparent text-xs font-mono font-medium transition">25m</button>
-                                <button onclick="CloudApp.setPomodoroPreset(50, '50m Ultra Block')" class="py-1.5 rounded-xl bg-zinc-100 dark:bg-carbon-850 hover:border-indigo-500 border border-transparent text-xs font-mono font-medium transition">50m</button>
-                                <button onclick="CloudApp.setPomodoroPreset(5, '5m Recovery')" class="py-1.5 rounded-xl bg-zinc-100 dark:bg-carbon-850 hover:border-indigo-500 border border-transparent text-xs font-mono font-medium transition">5m Break</button>
-                            </div>
-
-                            <!-- Start / Pause / Reset Controls -->
-                            <div class="flex items-center gap-2">
-                                <button onclick="CloudApp.togglePomodoro()" id="pomodoro-start-btn" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition shadow-sm">
-                                    Start Focus Session
-                                </button>
-                                <button onclick="CloudApp.resetPomodoro()" class="px-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-carbon-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-xs transition" title="Reset Timer">
-                                    <i class="fa-solid fa-rotate-left"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-                </section>
-
-            </main>
-        </div>
+      <button onclick="exportFullDatabase()" class="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-xs transition" title="Download JSON Backup">
+        <i class="fa-solid fa-download text-slate-400"></i>
+        <span class="hidden sm:inline">Backup JSON</span>
+      </button>
     </div>
 
-    <!-- ==========================================================================
-         MOBILE BOTTOM NAVIGATION BAR
-         ========================================================================== -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 dark:bg-carbon-900/95 glass-panel border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-5 items-center z-30 px-1">
-        <button onclick="CloudApp.switchView('overview')" data-mobile-nav="overview" class="flex flex-col items-center justify-center py-1 text-zinc-500">
-            <i class="fa-solid fa-grip text-sm"></i>
-            <span class="text-[10px] mt-1 font-medium">Overview</span>
-        </button>
-        <button onclick="CloudApp.switchView('drive')" data-mobile-nav="drive" class="flex flex-col items-center justify-center py-1 text-zinc-500">
-            <i class="fa-regular fa-hard-drive text-sm"></i>
-            <span class="text-[10px] mt-1 font-medium">Drive</span>
-        </button>
-        <button onclick="document.getElementById('hidden-file-input').click()" class="flex flex-col items-center justify-center">
-            <div class="w-9 h-9 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 flex items-center justify-center shadow-md">
-                <i class="fa-solid fa-plus text-xs"></i>
-            </div>
-        </button>
-        <button onclick="CloudApp.switchView('notes')" data-mobile-nav="notes" class="flex flex-col items-center justify-center py-1 text-zinc-500">
-            <i class="fa-regular fa-file-lines text-sm"></i>
-            <span class="text-[10px] mt-1 font-medium">Notes</span>
-        </button>
-        <button onclick="CloudApp.switchView('tasks')" data-mobile-nav="tasks" class="flex flex-col items-center justify-center py-1 text-zinc-500">
-            <i class="fa-solid fa-check-double text-sm"></i>
-            <span class="text-[10px] mt-1 font-medium">Focus</span>
-        </button>
-    </nav>
+    <!-- Right View Switcher -->
+    <div class="flex items-center space-x-1 bg-slate-200/70 dark:bg-slate-900/80 p-1 rounded-lg border border-slate-300/60 dark:border-slate-800">
+      <button id="view-grid-btn" onclick="setViewMode('grid')" class="px-2.5 py-1 rounded text-xs font-medium bg-white dark:bg-slate-800 shadow-sm text-sky-500 transition">
+        <i class="fa-solid fa-grip mr-1"></i>Grid
+      </button>
+      <button id="view-list-btn" onclick="setViewMode('list')" class="px-2.5 py-1 rounded text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition">
+        <i class="fa-solid fa-list mr-1"></i>Details
+      </button>
+    </div>
+  </div>
 
-    <!-- ==========================================================================
-         MODAL 1: UNIVERSAL BINARY FILE PREVIEW & INSPECTOR MODAL
-         ========================================================================== -->
-    <div id="file-preview-modal" class="fixed inset-0 z-50 hidden bg-zinc-950/80 glass-panel flex items-center justify-center p-3 sm:p-6">
-        <div class="bg-white dark:bg-carbon-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            
-            <!-- Modal Header -->
-            <div class="px-5 py-3.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 shrink-0">
-                <div class="flex items-center space-x-3 min-w-0">
-                    <div id="preview-file-icon" class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center text-sm shrink-0">
-                        <i class="fa-regular fa-file"></i>
-                    </div>
-                    <div class="truncate">
-                        <h3 id="preview-file-name" class="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-white truncate">filename.ext</h3>
-                        <p id="preview-file-meta" class="text-[11px] font-mono text-zinc-400">0 KB • MIME</p>
-                    </div>
-                </div>
-
-                <div class="flex items-center space-x-2 shrink-0">
-                    <button onclick="CloudApp.downloadPreviewedFile()" class="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-950 text-xs font-semibold flex items-center space-x-1.5 transition">
-                        <i class="fa-solid fa-download text-[11px]"></i>
-                        <span>Download</span>
-                    </button>
-                    <button onclick="CloudApp.deletePreviewedFile()" class="p-2 rounded-xl text-zinc-400 hover:text-rose-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" title="Delete File from IndexedDB">
-                        <i class="fa-solid fa-trash-can text-xs"></i>
-                    </button>
-                    <button onclick="CloudApp.closeFilePreview()" class="p-2 rounded-xl text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
-                        <i class="fa-solid fa-xmark text-sm"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Modal Dynamic Viewport -->
-            <div id="preview-viewport-body" class="flex-1 overflow-y-auto p-6 bg-zinc-50 dark:bg-carbon-950 flex items-center justify-center min-h-[320px]">
-                <!-- Populated dynamically based on Blob MIME type -->
-            </div>
-        </div>
+  <!-- ================= ADDRESS BAR & BREADCRUMBS ================= -->
+  <div class="h-11 bg-slate-100 dark:bg-[#111827] border-b border-slate-200 dark:border-slate-800 px-3 flex items-center gap-2 shrink-0">
+    <!-- Navigation Arrows -->
+    <div class="flex items-center space-x-1">
+      <button onclick="navigateUp()" id="btn-up" class="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 disabled:opacity-30 transition" title="Up one level">
+        <i class="fa-solid fa-arrow-up text-xs"></i>
+      </button>
+      <button onclick="navigateTo(null)" class="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition" title="Root Home">
+        <i class="fa-solid fa-house text-xs"></i>
+      </button>
     </div>
 
-    <!-- ==========================================================================
-         MODAL 2: CREATE NEW TEXT / CODE / MARKDOWN FILE DIRECTLY IN DRIVE
-         ========================================================================== -->
-    <div id="create-file-modal" class="fixed inset-0 z-50 hidden bg-zinc-950/75 glass-panel flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-carbon-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
-                <div>
-                    <h3 class="text-sm font-bold text-zinc-900 dark:text-white">Create New File in IndexedDB Drive</h3>
-                    <p class="text-xs text-zinc-500">Generates a native binary Blob and stores it inside your Cloud Drive</p>
-                </div>
-                <button onclick="document.getElementById('create-file-modal').classList.add('hidden')" class="text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <form onsubmit="event.preventDefault(); CloudApp.saveCreatedTextFile();" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div class="sm:col-span-2">
-                        <label class="block text-[11px] font-mono uppercase text-zinc-400 mb-1">File Name & Extension *</label>
-                        <input type="text" id="create-file-name" required placeholder="e.g., algorithm.py or notes.md" class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-carbon-850 border border-zinc-200 dark:border-zinc-800 text-xs font-mono focus:outline-none focus:border-indigo-500 select-text">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-mono uppercase text-zinc-400 mb-1">Partition</label>
-                        <select id="create-file-category" class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-carbon-850 border border-zinc-200 dark:border-zinc-800 text-xs focus:outline-none">
-                            <option value="Code">Code</option>
-                            <option value="Study">Study</option>
-                            <option value="Personal">Personal</option>
-                            <option value="Archive">Archive</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-[11px] font-mono uppercase text-zinc-400 mb-1">File Content</label>
-                    <textarea id="create-file-content" rows="8" required placeholder="// Write code, JSON, markdown, or plain text here..." class="w-full p-3 rounded-xl bg-zinc-50 dark:bg-carbon-850 border border-zinc-200 dark:border-zinc-800 text-xs font-mono focus:outline-none focus:border-indigo-500 select-text"></textarea>
-                </div>
-
-                <div class="flex justify-end space-x-2">
-                    <button type="button" onclick="document.getElementById('create-file-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-medium">Cancel</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 text-xs font-semibold">Save Blob to Drive</button>
-                </div>
-            </form>
-        </div>
+    <!-- Breadcrumb Bar -->
+    <div id="breadcrumb-bar" class="flex-1 h-8 bg-white dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-800 rounded-md px-2.5 flex items-center overflow-x-auto text-xs space-x-1">
+      <!-- Populated dynamically -->
     </div>
 
-    <!-- ==========================================================================
-         MODAL 3: COMMAND PALETTE (CTRL+K / CMD+K SPOTLIGHT)
-         ========================================================================== -->
-    <div id="command-palette-modal" onclick="if(event.target === this) CloudApp.closeCommandPalette()" class="fixed inset-0 z-50 hidden bg-zinc-950/70 glass-panel flex items-start justify-center pt-16 sm:pt-24 p-4">
-        <div class="bg-white dark:bg-carbon-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden">
-            <div class="p-3.5 border-b border-zinc-200/80 dark:border-zinc-800 flex items-center space-x-3">
-                <i class="fa-solid fa-terminal text-indigo-500 text-xs"></i>
-                <input 
-                    type="text" 
-                    id="command-palette-input" 
-                    oninput="CloudApp.renderCommandPaletteResults(this.value)" 
-                    placeholder="Type a command or search files, notes, and tasks..." 
-                    class="w-full bg-transparent text-xs sm:text-sm text-zinc-900 dark:text-white focus:outline-none select-text"
-                >
-                <kbd class="px-1.5 py-0.5 text-[10px] font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-400 rounded">ESC</kbd>
-            </div>
-            <div id="command-palette-results" class="max-h-80 overflow-y-auto p-2 divide-y divide-zinc-100 dark:divide-zinc-800/60">
-                <!-- Populated by JS -->
-            </div>
-        </div>
+    <!-- Search Box -->
+    <div class="relative w-44 sm:w-64">
+      <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
+      <input
+        id="search-input"
+        type="text"
+        oninput="handleSearch(this.value)"
+        placeholder="Search folders & notes..."
+        class="w-full h-8 pl-8 pr-7 bg-white dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-800 rounded-md text-xs focus:outline-none focus:border-sky-500 transition"
+      />
+      <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
     </div>
+  </div>
 
-    <!-- ==========================================================================
-         MODAL 4: DATABASE TELEMETRY & FULL PORTABLE BACKUP (EXPORT / IMPORT)
-         ========================================================================== -->
-    <div id="backup-modal" class="fixed inset-0 z-50 hidden bg-zinc-950/75 glass-panel flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-carbon-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
-            <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
-                <div>
-                    <h3 class="text-sm font-bold text-zinc-900 dark:text-white">IndexedDB Storage & Snapshot Backup</h3>
-                    <p class="text-xs text-zinc-500">Export or restore your entire database (`SaidulCloudDB`)</p>
-                </div>
-                <button onclick="document.getElementById('backup-modal').classList.add('hidden')" class="text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
+  <!-- ================= MAIN SPLIT-PANE WORKSPACE ================= -->
+  <div class="flex-1 flex overflow-hidden relative">
 
-            <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-carbon-850 border border-zinc-200/70 dark:border-zinc-800 space-y-1.5 text-xs font-mono">
-                <div class="flex justify-between">
-                    <span class="text-zinc-400">Database Engine:</span>
-                    <span class="text-emerald-500 font-semibold">IndexedDB v4 (Native Blob)</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-zinc-400">Vault Used:</span>
-                    <span id="modal-vault-used" class="text-zinc-900 dark:text-white">0 KB</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-zinc-400">Hardware Quota:</span>
-                    <span id="modal-hardware-quota" class="text-indigo-500">-- GB</span>
-                </div>
-            </div>
+    <!-- LEFT SIDEBAR: DIRECTORY TREE VIEW -->
+    <aside id="sidebar-tree" class="w-64 bg-slate-50 dark:bg-[#0e1422] border-r border-slate-200 dark:border-slate-800/90 flex flex-col shrink-0 select-none z-20 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-200">
+      <div class="px-3 py-2.5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Navigation Pane</span>
+        <button onclick="expandAllFolders()" class="text-[11px] text-sky-400 hover:underline">Expand All</button>
+      </div>
 
-            <div class="space-y-2.5">
-                <button onclick="CloudApp.exportDatabaseSnapshot()" class="w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-950 text-xs font-semibold flex items-center justify-between transition">
-                    <span><i class="fa-solid fa-download mr-2"></i>Export Full Snapshot (.JSON)</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                </button>
+      <!-- Recursive Tree Container -->
+      <div id="tree-container" class="flex-1 overflow-y-auto p-2 space-y-0.5 text-xs">
+        <!-- Rendered by JS -->
+      </div>
+    </aside>
 
-                <label class="cursor-pointer w-full py-2.5 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-carbon-850 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-semibold flex items-center justify-between border border-zinc-200 dark:border-zinc-800 transition">
-                    <span><i class="fa-solid fa-upload mr-2 text-indigo-500"></i>Restore Snapshot from File</span>
-                    <input type="file" accept=".json" onchange="CloudApp.importDatabaseSnapshot(event)" class="hidden">
-                </label>
-            </div>
+    <!-- CENTER / RIGHT: EXPLORER ITEMS + NOTE VIEWER -->
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden bg-white dark:bg-[#0b0f19]" oncontextmenu="handleWorkspaceContextMenu(event)">
+
+      <!-- Folder & File Explorer Area -->
+      <section id="explorer-pane" class="flex-1 overflow-y-auto p-4 transition-all">
+        <!-- Current Folder Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 id="current-folder-title" class="text-base font-bold flex items-center gap-2">
+              <i class="fa-solid fa-hard-drive text-sky-400"></i>
+              <span>Home Drive</span>
+            </h2>
+            <p id="current-folder-meta" class="text-xs text-slate-400 mt-0.5">Browse directories or select a note to read</p>
+          </div>
         </div>
+
+        <!-- Grid / List Container -->
+        <div id="items-container"></div>
+      </section>
+
+      <!-- SLIDE-OVER / SPLIT NOTE READER & EDITOR PANE -->
+      <section id="reader-pane" class="hidden w-full md:w-[52%] lg:w-[56%] border-l border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-[#101726] flex-col h-full shrink-0">
+        <!-- Note Viewer Top Header -->
+        <div class="h-12 px-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0 bg-white/80 dark:bg-[#141d30]">
+          <div class="flex items-center space-x-2.5 truncate">
+            <i class="fa-solid fa-file-lines text-sky-400 text-base"></i>
+            <div class="truncate">
+              <h3 id="reader-title" class="text-sm font-bold truncate">Note Title</h3>
+              <p id="reader-updated" class="text-[11px] text-slate-400">Last synced just now</p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-1.5 shrink-0">
+            <button id="btn-edit-note" onclick="toggleNoteEditor()" class="hidden px-2.5 py-1 rounded bg-sky-500/15 hover:bg-sky-500/25 text-sky-400 border border-sky-500/30 text-xs font-medium transition">
+              <i class="fa-solid fa-pen-to-square mr-1"></i>Edit
+            </button>
+            <button onclick="downloadActiveNote()" class="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs" title="Download Note (.md)">
+              <i class="fa-solid fa-download"></i>
+            </button>
+            <button onclick="closeReaderPane()" class="p-1.5 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 text-xs" title="Close Viewer">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Rendered Markdown Reading Mode -->
+        <div id="reader-content" class="flex-1 overflow-y-auto p-6 markdown-body select-text"></div>
+
+        <!-- Live Markdown Editor Mode (Admin Only) -->
+        <div id="editor-container" class="hidden flex-1 flex-col overflow-hidden p-4 gap-3">
+          <div class="flex items-center justify-between gap-2">
+            <input id="edit-note-title" type="text" class="flex-1 px-3 py-1.5 rounded bg-white dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:border-sky-500" placeholder="Note Title (.md)" />
+            <button onclick="saveEditedNote()" class="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow">
+              <i class="fa-solid fa-floppy-disk mr-1.5"></i>Save & Sync Cloud
+            </button>
+          </div>
+
+          <!-- Quick Formatting Bar -->
+          <div class="flex items-center gap-1 flex-wrap bg-slate-200/70 dark:bg-slate-900 p-1.5 rounded border border-slate-300 dark:border-slate-800 text-xs">
+            <button onclick="insertMd('## Heading\n')" class="px-2 py-1 rounded hover:bg-slate-300 dark:hover:bg-slate-800 font-bold">H2</button>
+            <button onclick="insertMd('**Bold Text**')" class="px-2 py-1 rounded hover:bg-slate-300 dark:hover:bg-slate-800 font-bold">B</button>
+            <button onclick="insertMd('*Italic*')" class="px-2 py-1 rounded hover:bg-slate-300 dark:hover:bg-slate-800 italic">I</button>
+            <button onclick="insertMd('\n- Bullet item\n')" class="px-2 py-1 rounded hover:bg-slate-300 dark:hover:bg-slate-800"><i class="fa-solid fa-list-ul"></i></button>
+            <button onclick="insertMd('\n```javascript\n// code here\n```\n')" class="px-2 py-1 rounded hover:bg-slate-300 dark:hover:bg-slate-800"><i class="fa-solid fa-code"></i></button>
+            <button onclick="insertMd('\n| Column 1 | Column 2 |\n|---|---|\n| Data | Value |\n')" class="px-2 py-1 rounded hover:bg-slate-300 dark:hover:bg-slate-800"><i class="fa-solid fa-table"></i></button>
+            <button onclick="insertMd('\n> **Key Exam Point:** Write important note here.\n')" class="px-2 py-1 rounded hover:bg-slate-300 dark:hover:bg-slate-800"><i class="fa-solid fa-quote-left"></i></button>
+          </div>
+
+          <textarea id="edit-note-body" class="flex-1 w-full p-3 rounded bg-white dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700 font-mono text-xs leading-relaxed focus:outline-none focus:border-sky-500 resize-none select-text" placeholder="Write Markdown notes here..."></textarea>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================= WINDOWS 11 FOOTER STATUS BAR ================= -->
+  <footer class="h-7 bg-slate-200 dark:bg-[#0e1422] border-t border-slate-300 dark:border-slate-800 px-3 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+    <div class="flex items-center space-x-4">
+      <span id="status-item-count">0 items</span>
+      <span id="status-path" class="hidden sm:inline truncate max-w-md">Path: /Home</span>
     </div>
-
-    <!-- TOAST STACK -->
-    <div id="toast-stack" class="fixed bottom-20 md:bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
-    <!-- ==========================================================================
-         INDEXEDDB BINARY STORAGE ENGINE & WORKSPACE CONTROLLER
-         ========================================================================== -->
-    <script>
-        /**
-         * ========================================================================
-         * 1. HIGH-CAPACITY INDEXEDDB ENGINE ('SaidulCloudDB')
-         * Stores real Binary Blobs, Notes, and Tasks with multi-gigabyte capacity.
-         * ========================================================================
-         */
-        const CloudDB = {
-            dbName: 'SaidulCloudDB',
-            version: 1,
-            db: null,
-
-            async init() {
-                if (this.db) return this.db;
-                return new Promise((resolve, reject) => {
-                    const req = indexedDB.open(this.dbName, this.version);
-                    req.onupgradeneeded = (e) => {
-                        const db = e.target.result;
-                        if (!db.objectStoreNames.contains('files')) {
-                            db.createObjectStore('files', { keyPath: 'id' });
-                        }
-                        if (!db.objectStoreNames.contains('notes')) {
-                            db.createObjectStore('notes', { keyPath: 'id' });
-                        }
-                        if (!db.objectStoreNames.contains('tasks')) {
-                            db.createObjectStore('tasks', { keyPath: 'id' });
-                        }
-                    };
-                    req.onsuccess = (e) => {
-                        this.db = e.target.result;
-                        resolve(this.db);
-                    };
-                    req.onerror = (e) => reject(e.target.error);
-                });
-            },
-
-            async getAll(storeName) {
-                await this.init();
-                return new Promise((resolve, reject) => {
-                    const tx = this.db.transaction(storeName, 'readonly');
-                    const store = tx.objectStore(storeName);
-                    const req = store.getAll();
-                    req.onsuccess = () => resolve(req.result || []);
-                    req.onerror = (e) => reject(e.target.error);
-                });
-            },
-
-            async put(storeName, item) {
-                await this.init();
-                return new Promise((resolve, reject) => {
-                    const tx = this.db.transaction(storeName, 'readwrite');
-                    const store = tx.objectStore(storeName);
-                    const req = store.put(item);
-                    req.onsuccess = () => resolve(item);
-                    req.onerror = (e) => reject(e.target.error);
-                });
-            },
-
-            async delete(storeName, id) {
-                await this.init();
-                return new Promise((resolve, reject) => {
-                    const tx = this.db.transaction(storeName, 'readwrite');
-                    const store = tx.objectStore(storeName);
-                    const req = store.delete(id);
-                    req.onsuccess = () => resolve(true);
-                    req.onerror = (e) => reject(e.target.error);
-                });
-            }
-        };
-
-        /**
-         * ========================================================================
-         * 2. MAIN WORKSPACE CONTROLLER ('CloudApp')
-         * ========================================================================
-         */
-        const CloudApp = {
-            currentView: 'overview',
-            driveCategory: 'All',
-            driveViewMode: 'grid', // 'grid' | 'table'
-            taskFilter: 'all',
-
-            files: [],
-            notes: [],
-            tasks: [],
-
-            activeNoteId: null,
-            noteAutoSaveTimer: null,
-            previewingFile: null,
-            activeObjectUrl: null,
-
-            // Pomodoro state
-            pomoSecondsLeft: 25 * 60,
-            pomoTotalSeconds: 25 * 60,
-            pomoInterval: null,
-            pomoRunning: false,
-            pomoSessionsCompleted: 0,
-
-            async init() {
-                this.initTheme();
-                this.bindGlobalShortcutsAndDragDrop();
-                this.startLiveClock();
-
-                await CloudDB.init();
-                await this.loadAllFromIndexedDB();
-
-                // Seed starter binary files, notes & tasks on very first visit
-                if (this.files.length === 0 && this.notes.length === 0 && this.tasks.length === 0 && !localStorage.getItem('saidul_cloudos_seeded_v1')) {
-                    await this.seedInitialWorkspace();
-                    localStorage.setItem('saidul_cloudos_seeded_v1', 'true');
-                    await this.loadAllFromIndexedDB();
-                }
-
-                this.switchView('overview');
-                this.renderAll();
-                await this.refreshStorageTelemetry();
-            },
-
-            async loadAllFromIndexedDB() {
-                this.files = await CloudDB.getAll('files');
-                this.notes = await CloudDB.getAll('notes');
-                this.tasks = await CloudDB.getAll('tasks');
-
-                // Sort newest first by default
-                this.files.sort((a, b) => b.updatedAt - a.updatedAt);
-                this.notes.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.updatedAt - a.updatedAt);
-                this.tasks.sort((a, b) => (a.completed === b.completed ? b.createdAt - a.createdAt : a.completed ? 1 : -1));
-
-                if (!this.activeNoteId && this.notes.length > 0) {
-                    this.activeNoteId = this.notes[0].id;
-                }
-            },
-
-            async seedInitialWorkspace() {
-                // 1. Seed 4 real binary Blob files into IndexedDB
-                const mdContent = `# Saidul CloudOS Architecture\n\n## High-Capacity Storage Engine\nInstead of using 5MB LocalStorage, this workspace stores raw binary \`Blob\` streams directly inside **IndexedDB (\`SaidulCloudDB\`)**.\n\n- **Capacity**: Up to 60% of available host disk space (typically 10 GB to 250 GB+).\n- **Zero Backend Lock-in**: 100% client-side execution.\n- **Universal Inspector**: Click any file to preview images, audio, video, PDFs, or code.`;
-                const pyContent = `# Compounding Skill & Wealth Calculator\ndef compound_growth(principal, annual_rate, years):\n    for year in range(1, years + 1):\n        principal *= (1 + annual_rate)\n        print(f"Year {year:02d}: ₹{principal:,.2f}")\n    return principal\n\nif __name__ == "__main__":\n    compound_growth(10000, 0.25, 10)\n`;
-                const svgDiagram = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450"><rect width="800" height="450" fill="#09090b"/><circle cx="650" cy="100" r="180" fill="#6366f1" opacity="0.12"/><rect x="60" y="60" width="680" height="330" rx="24" fill="#141418" stroke="#27272f" stroke-width="2"/><text x="100" y="140" font-family="Inter, sans-serif" font-weight="700" font-size="28" fill="#ffffff">SaidulCloudDB — Binary Blob Pipeline</text><text x="100" y="185" font-family="JetBrains Mono, monospace" font-size="15" fill="#a1a1aa">Client Disk Quota → IndexedDB ObjectStore → Instant ObjectURL Stream</text><rect x="100" y="230" width="180" height="90" rx="14" fill="#1c1c22" stroke="#6366f1"/><text x="190" y="280" font-family="JetBrains Mono, monospace" font-size="14" fill="#e4e4e7" text-anchor="middle">Raw File / Blob</text><rect x="320" y="230" width="180" height="90" rx="14" fill="#1c1c22" stroke="#10b981"/><text x="410" y="280" font-family="JetBrains Mono, monospace" font-size="14" fill="#e4e4e7" text-anchor="middle">IndexedDB Store</text><rect x="540" y="230" width="160" height="90" rx="14" fill="#1c1c22" stroke="#f59e0b"/><text x="620" y="280" font-family="JetBrains Mono, monospace" font-size="14" fill="#e4e4e7" text-anchor="middle">Zero-Latency UI</text></svg>`;
-
-                const starterFiles = [
-                    {
-                        id: 'file_seed_1',
-                        name: 'CloudOS-System-Architecture.md',
-                        type: 'text/markdown',
-                        category: 'Study',
-                        blob: new Blob([mdContent], { type: 'text/markdown' }),
-                        size: new Blob([mdContent]).size,
-                        updatedAt: Date.now() - 3600000
-                    },
-                    {
-                        id: 'file_seed_2',
-                        name: 'compounding_engine.py',
-                        type: 'text/x-python',
-                        category: 'Code',
-                        blob: new Blob([pyContent], { type: 'text/plain' }),
-                        size: new Blob([pyContent]).size,
-                        updatedAt: Date.now() - 1800000
-                    },
-                    {
-                        id: 'file_seed_3',
-                        name: 'IndexedDB-Pipeline-Diagram.svg',
-                        type: 'image/svg+xml',
-                        category: 'Media',
-                        blob: new Blob([svgDiagram], { type: 'image/svg+xml' }),
-                        size: new Blob([svgDiagram]).size,
-                        updatedAt: Date.now() - 900000
-                    }
-                ];
-
-                for (const f of starterFiles) {
-                    await CloudDB.put('files', f);
-                }
-
-                // 2. Seed starter notes
-                const starterNotes = [
-                    {
-                        id: 'note_seed_1',
-                        title: 'AI Orchestration & Full-Stack Roadmap',
-                        category: 'Architecture',
-                        pinned: true,
-                        content: `1. Master high-leverage system architecture instead of memorizing boilerplate syntax.\n2. Use IndexedDB for client-side multi-gigabyte storage when building zero-cost web apps.\n3. Combine clean minimal UI (Linear / Apple design tokens) with instant keyboard navigation (Ctrl+K).`,
-                        updatedAt: Date.now() - 1200000
-                    },
-                    {
-                        id: 'note_seed_2',
-                        title: 'Class X Board Exam High-Yield Revision',
-                        category: 'Science',
-                        pinned: false,
-                        content: `Focus areas for this week:\n- Physics: Light Reflection & Refraction numericals and ray diagrams.\n- Chemistry: Carbon & its compounds homologous series.\n- Mathematics: Quadratic Equations and Arithmetic Progressions.`,
-                        updatedAt: Date.now() - 5400000
-                    }
-                ];
-
-                for (const n of starterNotes) {
-                    await CloudDB.put('notes', n);
-                }
-
-                // 3. Seed starter tasks
-                const starterTasks = [
-                    {
-                        id: 'task_seed_1',
-                        title: 'Test uploading large PDFs, images, or code files into Cloud Drive',
-                        priority: 'Urgent',
-                        completed: false,
-                        createdAt: Date.now() - 600000
-                    },
-                    {
-                        id: 'task_seed_2',
-                        title: 'Complete 25-minute Pomodoro deep work block on Mathematics',
-                        priority: 'High',
-                        completed: false,
-                        createdAt: Date.now() - 1200000
-                    },
-                    {
-                        id: 'task_seed_3',
-                        title: 'Deploy updated single-file CloudOS to GitHub Pages',
-                        priority: 'Normal',
-                        completed: true,
-                        createdAt: Date.now() - 3600000
-                    }
-                ];
-
-                for (const t of starterTasks) {
-                    await CloudDB.put('tasks', t);
-                }
-            },
-
-            /* ----------------------------------------------------------------
-               HARDWARE STORAGE QUOTA TELEMETRY (navigator.storage.estimate)
-               ---------------------------------------------------------------- */
-            async refreshStorageTelemetry() {
-                const appFilesBytes = this.files.reduce((acc, f) => acc + (f.size || 0), 0);
-                const appNotesBytes = this.notes.reduce((acc, n) => acc + new Blob([n.content || '', n.title || '']).size, 0);
-                const appTasksBytes = this.tasks.length * 180;
-                const totalVaultBytes = appFilesBytes + appNotesBytes + appTasksBytes;
-
-                let quotaBytes = 10 * 1024 * 1024 * 1024; // Fallback 10 GB display if estimate API restricted
-                let browserUsageBytes = totalVaultBytes;
-
-                if (navigator.storage && navigator.storage.estimate) {
-                    try {
-                        const est = await navigator.storage.estimate();
-                        if (est.quota) quotaBytes = est.quota;
-                        if (est.usage) browserUsageBytes = Math.max(est.usage, totalVaultBytes);
-                    } catch (e) {
-                        // Ignore estimate errors in restricted sandboxes
-                    }
-                }
-
-                const formattedUsed = this.formatBytes(totalVaultBytes);
-                const formattedQuota = this.formatBytes(quotaBytes);
-                const pct = Math.min(100, Math.max(0.4, (totalVaultBytes / quotaBytes) * 100));
-
-                // Update Sidebar & Overview Widgets
-                document.getElementById('sidebar-used-bytes').textContent = formattedUsed;
-                document.getElementById('sidebar-quota-bytes').textContent = `of ${formattedQuota}`;
-                document.getElementById('sidebar-storage-bar').style.width = `${Math.max(2, pct)}%`;
-
-                document.getElementById('overview-vault-used').textContent = formattedUsed;
-                document.getElementById('overview-files-count').textContent = `${this.files.length} Binary Blob${this.files.length === 1 ? '' : 's'}`;
-                document.getElementById('overview-disk-quota').textContent = formattedQuota;
-                document.getElementById('overview-quota-pct').textContent = `${formattedUsed} stored (${this.files.length} files, ${this.notes.length} notes)`;
-
-                document.getElementById('drive-total-size-pill').textContent = `${formattedUsed} across ${this.files.length} files`;
-                document.getElementById('modal-vault-used').textContent = formattedUsed;
-                document.getElementById('modal-hardware-quota').textContent = formattedQuota;
-
-                // Update Navigation Badges
-                document.getElementById('nav-badge-files').textContent = this.files.length;
-                document.getElementById('nav-badge-notes').textContent = this.notes.length;
-                document.getElementById('nav-badge-tasks').textContent = this.tasks.filter(t => !t.completed).length;
-            },
-
-            async requestPersistentStorage() {
-                if (navigator.storage && navigator.storage.persist) {
-                    const granted = await navigator.storage.persist();
-                    const btn = document.getElementById('persist-badge-btn');
-                    if (granted) {
-                        btn.textContent = 'Locked ✓';
-                        btn.className = 'text-[10px] font-mono text-emerald-500 font-semibold';
-                        this.toast('Hardware persistent storage lock granted by browser!', 'success');
-                    } else {
-                        this.toast('Browser manages quota automatically based on disk space.', 'info');
-                    }
-                } else {
-                    this.toast('IndexedDB persistence active.', 'info');
-                }
-            },
-
-            /* ----------------------------------------------------------------
-               VIEW NAVIGATION & RENDERING
-               ---------------------------------------------------------------- */
-            switchView(view) {
-                this.currentView = view;
-                const titles = {
-                    overview: 'Command Overview',
-                    drive: 'Cloud Drive Vault',
-                    notes: 'Notes Studio',
-                    tasks: 'Execution & Focus Matrix'
-                };
-                document.getElementById('topbar-view-title').textContent = titles[view] || 'Workspace';
-
-                ['overview', 'drive', 'notes', 'tasks'].forEach(v => {
-                    document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
-                });
-
-                // Desktop Nav Highlight
-                document.querySelectorAll('[data-nav]').forEach(btn => {
-                    const active = btn.getAttribute('data-nav') === view;
-                    btn.className = active
-                        ? 'nav-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-zinc-800/90 text-zinc-900 dark:text-white transition'
-                        : 'nav-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/50 transition';
-                });
-
-                // Mobile Bottom Nav Highlight
-                document.querySelectorAll('[data-mobile-nav]').forEach(btn => {
-                    const active = btn.getAttribute('data-mobile-nav') === view;
-                    btn.className = active
-                        ? 'flex flex-col items-center justify-center py-1 text-indigo-500 font-semibold'
-                        : 'flex flex-col items-center justify-center py-1 text-zinc-500';
-                });
-
-                if (view === 'notes') {
-                    this.renderNotesStudio();
-                }
-            },
-
-            toggleSidebar() {
-                const sb = document.getElementById('app-sidebar');
-                sb.classList.toggle('md:hidden');
-            },
-
-            renderAll() {
-                this.renderOverview();
-                this.renderDrive();
-                this.renderNotesStudio();
-                this.renderTasks();
-            },
-
-            /* ----------------------------------------------------------------
-               MODULE 1: OVERVIEW DASHBOARD
-               ---------------------------------------------------------------- */
-            renderOverview() {
-                // Recent Files
-                const filesContainer = document.getElementById('overview-recent-files');
-                const recentFiles = this.files.slice(0, 4);
-                if (recentFiles.length === 0) {
-                    filesContainer.innerHTML = `<div class="text-xs text-zinc-400 py-6 text-center">No files in Drive yet. Drop files above!</div>`;
-                } else {
-                    filesContainer.innerHTML = recentFiles.map(f => `
-                        <div onclick="CloudApp.openFilePreview('${f.id}')" class="cursor-pointer p-2.5 rounded-xl bg-zinc-50 dark:bg-carbon-850 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between gap-2 transition">
-                            <div class="flex items-center space-x-2.5 min-w-0">
-                                <i class="${this.getFileIconClass(f.type, f.name)} text-sm shrink-0"></i>
-                                <span class="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">${this.escapeHTML(f.name)}</span>
-                            </div>
-                            <span class="text-[10px] font-mono text-zinc-400 shrink-0">${this.formatBytes(f.size)}</span>
-                        </div>
-                    `).join('');
-                }
-
-                // Recent Notes
-                const notesContainer = document.getElementById('overview-recent-notes');
-                const recentNotes = this.notes.slice(0, 4);
-                if (recentNotes.length === 0) {
-                    notesContainer.innerHTML = `<div class="text-xs text-zinc-400 py-6 text-center">No studio notes yet.</div>`;
-                } else {
-                    notesContainer.innerHTML = recentNotes.map(n => `
-                        <div onclick="CloudApp.openNoteById('${n.id}')" class="cursor-pointer p-2.5 rounded-xl bg-zinc-50 dark:bg-carbon-850 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between gap-2 transition">
-                            <div class="truncate">
-                                <div class="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">
-                                    ${n.pinned ? '<i class="fa-solid fa-thumbtack text-[10px] text-indigo-500 mr-1"></i>' : ''}${this.escapeHTML(n.title || 'Untitled Note')}
-                                </div>
-                                <div class="text-[10px] text-zinc-400 truncate">${this.escapeHTML((n.content || '').slice(0, 55))}</div>
-                            </div>
-                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-200/60 dark:bg-zinc-800 text-zinc-500 shrink-0">${this.escapeHTML(n.category)}</span>
-                        </div>
-                    `).join('');
-                }
-
-                // Priority Tasks
-                const tasksContainer = document.getElementById('overview-priority-tasks');
-                const pendingTasks = this.tasks.filter(t => !t.completed).slice(0, 4);
-                if (pendingTasks.length === 0) {
-                    tasksContainer.innerHTML = `<div class="text-xs text-zinc-400 py-6 text-center">All execution tasks completed!</div>`;
-                } else {
-                    tasksContainer.innerHTML = pendingTasks.map(t => `
-                        <div class="p-2.5 rounded-xl bg-zinc-50 dark:bg-carbon-850 border border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between gap-2">
-                            <label class="flex items-center space-x-2.5 min-w-0 cursor-pointer flex-1">
-                                <input type="checkbox" onchange="CloudApp.toggleTask('${t.id}')" class="rounded border-zinc-300 text-indigo-600 focus:ring-0">
-                                <span class="text-xs text-zinc-800 dark:text-zinc-200 truncate">${this.escapeHTML(t.title)}</span>
-                            </label>
-                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded ${this.getPriorityBadgeClass(t.priority)} shrink-0">${t.priority}</span>
-                        </div>
-                    `).join('');
-                }
-            },
-
-            /* ----------------------------------------------------------------
-               MODULE 2: CLOUD DRIVE (BINARY BLOB UPLOADER, GRID/TABLE, PREVIEW)
-               ---------------------------------------------------------------- */
-            async handleFilesSelected(fileList) {
-                if (!fileList || fileList.length === 0) return;
-                const count = fileList.length;
-                this.toast(`Storing ${count} binary file${count > 1 ? 's' : ''} into IndexedDB...`, 'info');
-
-                for (const file of Array.from(fileList)) {
-                    const category = this.inferFileCategory(file.type, file.name);
-                    const record = {
-                        id: 'file_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-                        name: file.name,
-                        type: file.type || 'application/octet-stream',
-                        size: file.size,
-                        category: this.driveCategory !== 'All' ? this.driveCategory : category,
-                        blob: file, // Native File/Blob stored directly inside IndexedDB
-                        updatedAt: Date.now()
-                    };
-                    await CloudDB.put('files', record);
-                }
-
-                document.getElementById('hidden-file-input').value = '';
-                await this.loadAllFromIndexedDB();
-                this.renderAll();
-                await this.refreshStorageTelemetry();
-                this.toast(`Saved ${count} file${count > 1 ? 's' : ''} to Cloud Drive!`, 'success');
-            },
-
-            inferFileCategory(mime, name) {
-                const ext = (name.split('.').pop() || '').toLowerCase();
-                if (mime.startsWith('image/') || mime.startsWith('video/') || mime.startsWith('audio/')) return 'Media';
-                if (['py', 'js', 'ts', 'html', 'css', 'json', 'cpp', 'java', 'sql', 'sh'].includes(ext)) return 'Code';
-                if (['pdf', 'doc', 'docx', 'ppt', 'pptx', 'md', 'txt'].includes(ext)) return 'Study';
-                if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return 'Archive';
-                return 'Personal';
-            },
-
-            filterDriveCategory(cat) {
-                this.driveCategory = cat;
-                this.switchView('drive');
-                this.renderDrive();
-            },
-
-            setDriveViewMode(mode) {
-                this.driveViewMode = mode;
-                this.renderDrive();
-            },
-
-            renderDrive() {
-                // Render Category Pills
-                const categories = ['All', 'Study', 'Code', 'Media', 'Personal', 'Archive'];
-                const pillsBar = document.getElementById('drive-category-pills');
-                pillsBar.innerHTML = categories.map(c => {
-                    const active = c === this.driveCategory;
-                    return `
-                        <button onclick="CloudApp.filterDriveCategory('${c}')" class="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition ${active ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-sm' : 'bg-white dark:bg-carbon-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'}">
-                            ${c}
-                        </button>
-                    `;
-                }).join('');
-
-                document.getElementById('drive-active-folder-label').textContent = this.driveCategory === 'All' ? 'All Files' : this.driveCategory;
-
-                // Update Grid/Table toggle buttons
-                document.getElementById('drive-view-grid-btn').className = this.driveViewMode === 'grid'
-                    ? 'px-2.5 py-1 rounded-lg text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white'
-                    : 'px-2.5 py-1 rounded-lg text-xs text-zinc-400';
-                document.getElementById('drive-view-table-btn').className = this.driveViewMode === 'table'
-                    ? 'px-2.5 py-1 rounded-lg text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white'
-                    : 'px-2.5 py-1 rounded-lg text-xs text-zinc-400';
-
-                // Filter & Sort Files
-                const query = (document.getElementById('drive-search-input')?.value || '').toLowerCase().trim();
-                const sortBy = document.getElementById('drive-sort-select')?.value || 'date-desc';
-
-                let filtered = this.files.filter(f => {
-                    const matchCat = this.driveCategory === 'All' || f.category === this.driveCategory;
-                    const matchQuery = !query || f.name.toLowerCase().includes(query) || (f.category || '').toLowerCase().includes(query);
-                    return matchCat && matchQuery;
-                });
-
-                if (sortBy === 'date-desc') filtered.sort((a, b) => b.updatedAt - a.updatedAt);
-                if (sortBy === 'size-desc') filtered.sort((a, b) => (b.size || 0) - (a.size || 0));
-                if (sortBy === 'name-asc') filtered.sort((a, b) => a.name.localeCompare(b.name));
-
-                const container = document.getElementById('drive-files-container');
-
-                if (filtered.length === 0) {
-                    container.innerHTML = `
-                        <div class="bg-white dark:bg-carbon-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-12 text-center space-y-3">
-                            <div class="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-carbon-850 text-zinc-400 flex items-center justify-center mx-auto text-lg">
-                                <i class="fa-regular fa-folder-open"></i>
-                            </div>
-                            <div class="space-y-1">
-                                <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">No files in this partition</h3>
-                                <p class="text-xs text-zinc-500">Drag and drop files from your laptop or phone to store them in IndexedDB.</p>
-                            </div>
-                        </div>
-                    `;
-                    return;
-                }
-
-                if (this.driveViewMode === 'grid') {
-                    container.innerHTML = `
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            ${filtered.map(f => `
-                                <div onclick="CloudApp.openFilePreview('${f.id}')" class="cursor-pointer group bg-white dark:bg-carbon-900 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-indigo-500/60 dark:hover:border-indigo-500/60 rounded-2xl p-4 flex flex-col justify-between space-y-4 shadow-sm transition">
-                                    <div class="flex items-start justify-between gap-2">
-                                        <div class="w-10 h-10 rounded-xl bg-zinc-50 dark:bg-carbon-850 border border-zinc-200/60 dark:border-zinc-800 flex items-center justify-center text-base">
-                                            <i class="${this.getFileIconClass(f.type, f.name)}"></i>
-                                        </div>
-                                        <div class="flex items-center space-x-1" onclick="event.stopPropagation()">
-                                            <button onclick="CloudApp.downloadFileById('${f.id}')" class="w-7 h-7 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition" title="Download">
-                                                <i class="fa-solid fa-download text-[11px]"></i>
-                                            </button>
-                                            <button onclick="CloudApp.deleteFileById('${f.id}')" class="w-7 h-7 rounded-lg text-zinc-400 hover:text-rose-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition" title="Delete">
-                                                <i class="fa-solid fa-trash-can text-[11px]"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-1">
-                                        <h4 class="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-white truncate group-hover:text-indigo-500 transition">${this.escapeHTML(f.name)}</h4>
-                                        <div class="flex items-center justify-between text-[11px] font-mono text-zinc-400">
-                                            <span>${this.formatBytes(f.size)}</span>
-                                            <span class="px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-carbon-850 text-zinc-500">${this.escapeHTML(f.category)}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
-                } else {
-                    // Ultra-clean Linear Table View
-                    container.innerHTML = `
-                        <div class="bg-white dark:bg-carbon-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl overflow-hidden shadow-sm">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="border-b border-zinc-200/80 dark:border-zinc-800 text-[10px] font-mono uppercase text-zinc-400 bg-zinc-50/50 dark:bg-carbon-850/50">
-                                        <th class="py-2.5 px-4">Name</th>
-                                        <th class="py-2.5 px-4 hidden sm:table-cell">Partition</th>
-                                        <th class="py-2.5 px-4">Size</th>
-                                        <th class="py-2.5 px-4 hidden md:table-cell">Modified</th>
-                                        <th class="py-2.5 px-4 text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-xs">
-                                    ${filtered.map(f => `
-                                        <tr onclick="CloudApp.openFilePreview('${f.id}')" class="cursor-pointer hover:bg-zinc-50 dark:hover:bg-carbon-850 transition">
-                                            <td class="py-3 px-4 font-medium text-zinc-900 dark:text-white flex items-center space-x-2.5 max-w-[220px] sm:max-w-xs truncate">
-                                                <i class="${this.getFileIconClass(f.type, f.name)} shrink-0"></i>
-                                                <span class="truncate">${this.escapeHTML(f.name)}</span>
-                                            </td>
-                                            <td class="py-3 px-4 hidden sm:table-cell">
-                                                <span class="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[11px] font-mono text-zinc-500">${this.escapeHTML(f.category)}</span>
-                                            </td>
-                                            <td class="py-3 px-4 font-mono text-zinc-500">${this.formatBytes(f.size)}</td>
-                                            <td class="py-3 px-4 font-mono text-zinc-400 hidden md:table-cell">${new Date(f.updatedAt).toLocaleDateString()}</td>
-                                            <td class="py-3 px-4 text-right space-x-1" onclick="event.stopPropagation()">
-                                                <button onclick="CloudApp.downloadFileById('${f.id}')" class="px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500"><i class="fa-solid fa-download"></i></button>
-                                                <button onclick="CloudApp.deleteFileById('${f.id}')" class="px-2 py-1 rounded hover:bg-rose-500/10 text-zinc-400 hover:text-rose-500"><i class="fa-solid fa-trash-can"></i></button>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    `;
-                }
-            },
-
-            /* ----------------------------------------------------------------
-               UNIVERSAL BINARY FILE PREVIEW MODAL
-               ---------------------------------------------------------------- */
-            async openFilePreview(id) {
-                const file = this.files.find(f => f.id === id);
-                if (!file) return;
-                this.previewingFile = file;
-
-                if (this.activeObjectUrl) {
-                    URL.revokeObjectURL(this.activeObjectUrl);
-                    this.activeObjectUrl = null;
-                }
-
-                document.getElementById('preview-file-name').textContent = file.name;
-                document.getElementById('preview-file-meta').textContent = `${this.formatBytes(file.size)} • ${file.type || 'Binary Blob'} • ${file.category}`;
-                document.getElementById('preview-file-icon').innerHTML = `<i class="${this.getFileIconClass(file.type, file.name)}"></i>`;
-
-                const viewport = document.getElementById('preview-viewport-body');
-                viewport.innerHTML = `<div class="text-xs font-mono text-zinc-400">Rendering binary stream...</div>`;
-                document.getElementById('file-preview-modal').classList.remove('hidden');
-
-                const mime = (file.type || '').toLowerCase();
-                const ext = (file.name.split('.').pop() || '').toLowerCase();
-
-                if (mime.startsWith('image/')) {
-                    this.activeObjectUrl = URL.createObjectURL(file.blob);
-                    viewport.innerHTML = `<img src="${this.activeObjectUrl}" alt="${this.escapeHTML(file.name)}" class="max-h-[70vh] max-w-full rounded-xl object-contain shadow-lg">`;
-                } else if (mime.startsWith('video/')) {
-                    this.activeObjectUrl = URL.createObjectURL(file.blob);
-                    viewport.innerHTML = `<video src="${this.activeObjectUrl}" controls autoplay class="max-h-[70vh] max-w-full rounded-xl shadow-lg"></video>`;
-                } else if (mime.startsWith('audio/')) {
-                    this.activeObjectUrl = URL.createObjectURL(file.blob);
-                    viewport.innerHTML = `<audio src="${this.activeObjectUrl}" controls autoplay class="w-full max-w-md"></audio>`;
-                } else if (mime === 'application/pdf' || ext === 'pdf') {
-                    this.activeObjectUrl = URL.createObjectURL(file.blob);
-                    viewport.innerHTML = `<iframe src="${this.activeObjectUrl}" class="w-full h-[70vh] rounded-xl border border-zinc-200 dark:border-zinc-800"></iframe>`;
-                } else if (
-                    mime.startsWith('text/') ||
-                    ['md', 'txt', 'py', 'js', 'ts', 'html', 'css', 'json', 'csv', 'xml', 'yml', 'sh', 'cpp', 'java'].includes(ext)
-                ) {
-                    const text = await file.blob.text();
-                    viewport.innerHTML = `
-                        <pre class="w-full h-full max-h-[68vh] overflow-auto p-4 rounded-xl bg-zinc-900 text-zinc-100 font-mono text-xs leading-relaxed select-text border border-zinc-800">${this.escapeHTML(text)}</pre>
-                    `;
-                } else {
-                    viewport.innerHTML = `
-                        <div class="text-center space-y-3 py-12">
-                            <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mx-auto text-2xl">
-                                <i class="${this.getFileIconClass(file.type, file.name)}"></i>
-                            </div>
-                            <div class="space-y-1">
-                                <p class="text-sm font-semibold text-zinc-900 dark:text-white">Binary Archive Stored in IndexedDB</p>
-                                <p class="text-xs text-zinc-500 font-mono">${this.escapeHTML(file.name)} (${this.formatBytes(file.size)})</p>
-                            </div>
-                            <button onclick="CloudApp.downloadPreviewedFile()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition">
-                                Download Native File
-                            </button>
-                        </div>
-                    `;
-                }
-            },
-
-            closeFilePreview() {
-                document.getElementById('file-preview-modal').classList.add('hidden');
-                if (this.activeObjectUrl) {
-                    URL.revokeObjectURL(this.activeObjectUrl);
-                    this.activeObjectUrl = null;
-                }
-                this.previewingFile = null;
-            },
-
-            downloadPreviewedFile() {
-                if (this.previewingFile) {
-                    this.downloadFileById(this.previewingFile.id);
-                }
-            },
-
-            async deletePreviewedFile() {
-                if (!this.previewingFile) return;
-                const id = this.previewingFile.id;
-                this.closeFilePreview();
-                await this.deleteFileById(id);
-            },
-
-            downloadFileById(id) {
-                const file = this.files.find(f => f.id === id);
-                if (!file || !file.blob) return;
-                const url = URL.createObjectURL(file.blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = file.name;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 1500);
-                this.toast(`Downloading ${file.name}...`, 'info');
-            },
-
-            async deleteFileById(id) {
-                await CloudDB.delete('files', id);
-                await this.loadAllFromIndexedDB();
-                this.renderAll();
-                await this.refreshStorageTelemetry();
-                this.toast('File removed from IndexedDB Drive.', 'info');
-            },
-
-            openCreateFileModal() {
-                document.getElementById('create-file-name').value = '';
-                document.getElementById('create-file-content').value = '';
-                document.getElementById('create-file-modal').classList.remove('hidden');
-            },
-
-            async saveCreatedTextFile() {
-                const name = document.getElementById('create-file-name').value.trim();
-                const category = document.getElementById('create-file-category').value;
-                const content = document.getElementById('create-file-content').value;
-                if (!name) return;
-
-                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                const record = {
-                    id: 'file_' + Date.now(),
-                    name,
-                    type: 'text/plain',
-                    size: blob.size,
-                    category,
-                    blob,
-                    updatedAt: Date.now()
-                };
-
-                await CloudDB.put('files', record);
-                document.getElementById('create-file-modal').classList.add('hidden');
-                await this.loadAllFromIndexedDB();
-                this.renderAll();
-                await this.refreshStorageTelemetry();
-                this.toast(`Created ${name} in Cloud Drive!`, 'success');
-            },
-
-            /* ----------------------------------------------------------------
-               MODULE 3: MINIMALIST NOTES & KNOWLEDGE STUDIO
-               ---------------------------------------------------------------- */
-            renderNotesStudio() {
-                this.renderNotesList();
-                const active = this.notes.find(n => n.id === this.activeNoteId) || this.notes[0];
-                if (active) {
-                    this.activeNoteId = active.id;
-                    document.getElementById('active-note-title').value = active.title || '';
-                    document.getElementById('active-note-body').value = active.content || '';
-                    document.getElementById('active-note-category').value = active.category || 'Computer Science';
-                    document.getElementById('active-note-pin-btn').className = active.pinned
-                        ? 'px-2.5 py-1 rounded-lg border border-indigo-500/40 bg-indigo-500/10 text-xs text-indigo-500 transition'
-                        : 'px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition';
-                    this.updateNoteWordMetrics(active.content || '');
-                } else {
-                    document.getElementById('active-note-title').value = '';
-                    document.getElementById('active-note-body').value = '';
-                    this.updateNoteWordMetrics('');
-                }
-            },
-
-            renderNotesList() {
-                const listEl = document.getElementById('notes-sidebar-list');
-                const query = (document.getElementById('notes-search-input')?.value || '').toLowerCase().trim();
-                const filtered = this.notes.filter(n =>
-                    !query ||
-                    (n.title || '').toLowerCase().includes(query) ||
-                    (n.content || '').toLowerCase().includes(query) ||
-                    (n.category || '').toLowerCase().includes(query)
-                );
-
-                if (filtered.length === 0) {
-                    listEl.innerHTML = `<div class="p-6 text-center text-xs text-zinc-400">No studio notes found.</div>`;
-                    return;
-                }
-
-                listEl.innerHTML = filtered.map(n => {
-                    const isSelected = n.id === this.activeNoteId;
-                    return `
-                        <button onclick="CloudApp.selectNote('${n.id}')" class="w-full text-left p-3.5 transition block ${isSelected ? 'bg-zinc-100/90 dark:bg-carbon-850 border-l-2 border-indigo-500' : 'hover:bg-zinc-50 dark:hover:bg-carbon-850/50'}">
-                            <div class="flex items-center justify-between gap-2">
-                                <h4 class="text-xs font-semibold text-zinc-900 dark:text-white truncate">
-                                    ${n.pinned ? '<i class="fa-solid fa-thumbtack text-[10px] text-indigo-500 mr-1"></i>' : ''}${this.escapeHTML(n.title || 'Untitled Note')}
-                                </h4>
-                                <span class="text-[10px] font-mono text-zinc-400 shrink-0">${this.escapeHTML(n.category)}</span>
-                            </div>
-                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-1">${this.escapeHTML((n.content || 'Empty note...').slice(0, 65))}</p>
-                        </button>
-                    `;
-                }).join('');
-            },
-
-            selectNote(id) {
-                this.activeNoteId = id;
-                this.renderNotesStudio();
-            },
-
-            openNoteById(id) {
-                this.activeNoteId = id;
-                this.switchView('notes');
-                this.renderNotesStudio();
-            },
-
-            async createNewNote() {
-                const newNote = {
-                    id: 'note_' + Date.now(),
-                    title: 'Untitled Studio Note',
-                    category: 'Computer Science',
-                    pinned: false,
-                    content: '',
-                    updatedAt: Date.now()
-                };
-                await CloudDB.put('notes', newNote);
-                await this.loadAllFromIndexedDB();
-                this.activeNoteId = newNote.id;
-                this.renderAll();
-                await this.refreshStorageTelemetry();
-                document.getElementById('active-note-title').focus();
-            },
-
-            async createNewNoteAndOpen() {
-                await this.createNewNote();
-                this.switchView('notes');
-            },
-
-            queueNoteAutoSave() {
-                const body = document.getElementById('active-note-body').value;
-                this.updateNoteWordMetrics(body);
-
-                const indicator = document.getElementById('note-autosave-indicator');
-                indicator.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i>Saving...`;
-                indicator.className = 'text-amber-500 flex items-center gap-1';
-
-                clearTimeout(this.noteAutoSaveTimer);
-                this.noteAutoSaveTimer = setTimeout(() => this.commitActiveNoteSave(), 350);
-            },
-
-            async commitActiveNoteSave() {
-                if (!this.activeNoteId) {
-                    await this.createNewNote();
-                }
-                const note = this.notes.find(n => n.id === this.activeNoteId);
-                if (!note) return;
-
-                note.title = document.getElementById('active-note-title').value.trim() || 'Untitled Studio Note';
-                note.content = document.getElementById('active-note-body').value;
-                note.category = document.getElementById('active-note-category').value;
-                note.updatedAt = Date.now();
-
-                await CloudDB.put('notes', note);
-                await this.loadAllFromIndexedDB();
-                this.renderNotesList();
-                this.renderOverview();
-                await this.refreshStorageTelemetry();
-
-                const indicator = document.getElementById('note-autosave-indicator');
-                indicator.innerHTML = `<i class="fa-solid fa-check text-[10px]"></i>Saved`;
-                indicator.className = 'text-emerald-500 flex items-center gap-1';
-            },
-
-            async toggleActiveNotePin() {
-                const note = this.notes.find(n => n.id === this.activeNoteId);
-                if (!note) return;
-                note.pinned = !note.pinned;
-                note.updatedAt = Date.now();
-                await CloudDB.put('notes', note);
-                await this.loadAllFromIndexedDB();
-                this.renderNotesStudio();
-                this.renderOverview();
-            },
-
-            async exportActiveNoteAsFile() {
-                const note = this.notes.find(n => n.id === this.activeNoteId);
-                if (!note) return;
-                const safeName = (note.title || 'studio-note').replace(/[^a-z0-9-_]/gi, '_') + '.md';
-                const mdText = `# ${note.title}\n\n${note.content}`;
-                const blob = new Blob([mdText], { type: 'text/markdown' });
-
-                await CloudDB.put('files', {
-                    id: 'file_' + Date.now(),
-                    name: safeName,
-                    type: 'text/markdown',
-                    size: blob.size,
-                    category: 'Study',
-                    blob,
-                    updatedAt: Date.now()
-                });
-
-                await this.loadAllFromIndexedDB();
-                this.renderAll();
-                await this.refreshStorageTelemetry();
-                this.toast(`Saved "${safeName}" into Cloud Drive!`, 'success');
-            },
-
-            async deleteActiveNote() {
-                if (!this.activeNoteId) return;
-                await CloudDB.delete('notes', this.activeNoteId);
-                this.activeNoteId = null;
-                await this.loadAllFromIndexedDB();
-                this.renderAll();
-                await this.refreshStorageTelemetry();
-                this.toast('Studio note deleted.', 'info');
-            },
-
-            updateNoteWordMetrics(text) {
-                const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-                const readMins = Math.max(1, Math.ceil(words / 200));
-                document.getElementById('note-metrics-display').textContent = `${words} words • ${readMins} min read`;
-            },
-
-            /* ----------------------------------------------------------------
-               MODULE 4: EXECUTION & FOCUS MATRIX (TASKS + POMODORO)
-               ---------------------------------------------------------------- */
-            setTaskFilter(f) {
-                this.taskFilter = f;
-                this.renderTasks();
-            },
-
-            renderTasks() {
-                ['all', 'pending', 'done'].forEach(f => {
-                    const btn = document.getElementById(`task-filter-${f}`);
-                    btn.className = f === this.taskFilter
-                        ? 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-carbon-900 text-zinc-900 dark:text-white shadow-sm'
-                        : 'px-2.5 py-1 rounded-lg text-xs font-medium text-zinc-500';
-                });
-
-                const list = document.getElementById('tasks-list-container');
-                const filtered = this.tasks.filter(t => {
-                    if (this.taskFilter === 'pending') return !t.completed;
-                    if (this.taskFilter === 'done') return t.completed;
-                    return true;
-                });
-
-                if (filtered.length === 0) {
-                    list.innerHTML = `<div class="py-10 text-center text-xs text-zinc-400">No tasks in this view.</div>`;
-                    return;
-                }
-
-                list.innerHTML = filtered.map(t => `
-                    <div class="py-3 px-2 flex items-center justify-between gap-3 group hover:bg-zinc-50/80 dark:hover:bg-carbon-850/50 rounded-xl transition">
-                        <label class="flex items-center space-x-3 min-w-0 flex-1 cursor-pointer">
-                            <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="CloudApp.toggleTask('${t.id}')" class="w-4 h-4 rounded border-zinc-300 text-indigo-600 focus:ring-0">
-                            <span class="text-xs sm:text-sm ${t.completed ? 'line-through text-zinc-400' : 'text-zinc-800 dark:text-zinc-200 font-medium'} truncate">${this.escapeHTML(t.title)}</span>
-                        </label>
-                        <div class="flex items-center space-x-2 shrink-0">
-                            <span class="text-[10px] font-mono px-2 py-0.5 rounded ${this.getPriorityBadgeClass(t.priority)}">${t.priority}</span>
-                            <button onclick="CloudApp.deleteTask('${t.id}')" class="w-7 h-7 rounded-lg text-zinc-400 hover:text-rose-500 flex items-center justify-center opacity-70 group-hover:opacity-100">
-                                <i class="fa-solid fa-trash-can text-[11px]"></i>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            },
-
-            async addTaskFromForm() {
-                const input = document.getElementById('new-task-title');
-                const priority = document.getElementById('new-task-priority').value;
-                const title = input.value.trim();
-                if (!title) return;
-
-                await CloudDB.put('tasks', {
-                    id: 'task_' + Date.now(),
-                    title,
-                    priority,
-                    completed: false,
-                    createdAt: Date.now()
-                });
-
-                input.value = '';
-                await this.loadAllFromIndexedDB();
-                this.renderAll();
-                await this.refreshStorageTelemetry();
-                this.toast('Task added to Execution Matrix.', 'success');
-            },
-
-            async toggleTask(id) {
-                const task = this.tasks.find(t => t.id === id);
-                if (!task) return;
-                task.completed = !task.completed;
-                await CloudDB.put('tasks', task);
-                await this.loadAllFromIndexedDB();
-                this.renderAll();
-                await this.refreshStorageTelemetry();
-            },
-
-            async deleteTask(id) {
-                await CloudDB.delete('tasks', id);
-                await this.loadAllFromIndexedDB();
-                this.renderAll();
-                await this.refreshStorageTelemetry();
-            },
-
-            getPriorityBadgeClass(p) {
-                if (p === 'Urgent') return 'bg-rose-500/15 text-rose-500 border border-rose-500/20';
-                if (p === 'High') return 'bg-amber-500/15 text-amber-500 border border-amber-500/20';
-                if (p === 'Normal') return 'bg-indigo-500/15 text-indigo-500 border border-indigo-500/20';
-                return 'bg-zinc-500/15 text-zinc-400';
-            },
-
-            /* ----------------------------------------------------------------
-               POMODORO FOCUS ENGINE
-               ---------------------------------------------------------------- */
-            setPomodoroPreset(mins, label) {
-                clearInterval(this.pomoInterval);
-                this.pomoRunning = false;
-                this.pomoTotalSeconds = mins * 60;
-                this.pomoSecondsLeft = mins * 60;
-                document.getElementById('pomodoro-mode-label').textContent = label;
-                document.getElementById('pomodoro-start-btn').textContent = 'Start Focus Session';
-                document.getElementById('topbar-timer-dot').className = 'w-1.5 h-1.5 rounded-full bg-zinc-400';
-                this.updatePomodoroClockUI();
-            },
-
-            togglePomodoro() {
-                if (this.pomoRunning) {
-                    clearInterval(this.pomoInterval);
-                    this.pomoRunning = false;
-                    document.getElementById('pomodoro-start-btn').textContent = 'Resume Focus';
-                    document.getElementById('topbar-timer-dot').className = 'w-1.5 h-1.5 rounded-full bg-amber-400';
-                } else {
-                    this.pomoRunning = true;
-                    document.getElementById('pomodoro-start-btn').textContent = 'Pause Session';
-                    document.getElementById('topbar-timer-dot').className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
-                    this.pomoInterval = setInterval(() => {
-                        if (this.pomoSecondsLeft > 0) {
-                            this.pomoSecondsLeft--;
-                            this.updatePomodoroClockUI();
-                        } else {
-                            clearInterval(this.pomoInterval);
-                            this.pomoRunning = false;
-                            this.pomoSessionsCompleted++;
-                            document.getElementById('pomodoro-sessions-badge').textContent = `${this.pomoSessionsCompleted} Sessions`;
-                            document.getElementById('pomodoro-start-btn').textContent = 'Start Focus Session';
-                            this.playCompletionChime();
-                            this.toast('Focus session complete! Great work.', 'success');
-                        }
-                    }, 1000);
-                }
-            },
-
-            resetPomodoro() {
-                clearInterval(this.pomoInterval);
-                this.pomoRunning = false;
-                this.pomoSecondsLeft = this.pomoTotalSeconds;
-                document.getElementById('pomodoro-start-btn').textContent = 'Start Focus Session';
-                document.getElementById('topbar-timer-dot').className = 'w-1.5 h-1.5 rounded-full bg-zinc-400';
-                this.updatePomodoroClockUI();
-            },
-
-            updatePomodoroClockUI() {
-                const m = String(Math.floor(this.pomoSecondsLeft / 60)).padStart(2, '0');
-                const s = String(this.pomoSecondsLeft % 60).padStart(2, '0');
-                const formatted = `${m}:${s}`;
-                document.getElementById('pomodoro-clock-display').textContent = formatted;
-                document.getElementById('topbar-timer-display').textContent = formatted;
-            },
-
-            playCompletionChime() {
-                try {
-                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-                    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.18); // A5
-                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start();
-                    osc.stop(ctx.currentTime + 0.8);
-                } catch (e) {}
-            },
-
-            /* ----------------------------------------------------------------
-               MODULE 5: COMMAND PALETTE (CTRL+K / CMD+K)
-               ---------------------------------------------------------------- */
-            openCommandPalette() {
-                const modal = document.getElementById('command-palette-modal');
-                const input = document.getElementById('command-palette-input');
-                modal.classList.remove('hidden');
-                input.value = '';
-                this.renderCommandPaletteResults('');
-                setTimeout(() => input.focus(), 50);
-            },
-
-            closeCommandPalette() {
-                document.getElementById('command-palette-modal').classList.add('hidden');
-            },
-
-            renderCommandPaletteResults(query) {
-                const q = (query || '').toLowerCase().trim();
-                const container = document.getElementById('command-palette-results');
-
-                const quickActions = [
-                    { label: 'Upload Binary Files to Cloud Drive', icon: 'fa-solid fa-cloud-arrow-up text-indigo-500', action: () => { this.closeCommandPalette(); document.getElementById('hidden-file-input').click(); } },
-                    { label: 'Create New Studio Note', icon: 'fa-solid fa-pen-nib text-emerald-500', action: () => { this.closeCommandPalette(); this.createNewNoteAndOpen(); } },
-                    { label: 'Create New Code / Text File', icon: 'fa-solid fa-code text-amber-500', action: () => { this.closeCommandPalette(); this.openCreateFileModal(); } },
-                    { label: 'Switch to Cloud Drive Vault', icon: 'fa-regular fa-hard-drive text-zinc-400', action: () => { this.closeCommandPalette(); this.switchView('drive'); } },
-                    { label: 'Switch to Execution & Focus Matrix', icon: 'fa-solid fa-check-double text-zinc-400', action: () => { this.closeCommandPalette(); this.switchView('tasks'); } },
-                    { label: 'Toggle Light / Dark Theme', icon: 'fa-solid fa-circle-half-stroke text-zinc-400', action: () => { this.closeCommandPalette(); this.toggleTheme(); } }
-                ];
-
-                window._cmdCallbacks = [];
-                const registerCallback = (fn) => {
-                    const idx = window._cmdCallbacks.length;
-                    window._cmdCallbacks.push(fn);
-                    return ` window._cmdCallbacks[${idx}]() `;
-                };
-
-                let html = '';
-
-                // Match Files
-                const matchedFiles = this.files.filter(f => !q || f.name.toLowerCase().includes(q)).slice(0, 4);
-                if (matchedFiles.length > 0) {
-                    html += `<div class="px-2.5 py-1 text-[10px] font-mono uppercase text-zinc-400">Drive Files</div>`;
-                    html += matchedFiles.map(f => `
-                        <button onclick="${registerCallback(() => { this.closeCommandPalette(); this.openFilePreview(f.id); })}" class="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-carbon-850 flex items-center justify-between text-xs transition">
-                            <span class="flex items-center space-x-2.5 truncate">
-                                <i class="${this.getFileIconClass(f.type, f.name)}"></i>
-                                <span class="truncate text-zinc-800 dark:text-zinc-200">${this.escapeHTML(f.name)}</span>
-                            </span>
-                            <span class="text-[10px] font-mono text-zinc-400">${this.formatBytes(f.size)}</span>
-                        </button>
-                    `).join('');
-                }
-
-                // Match Notes
-                const matchedNotes = this.notes.filter(n => !q || (n.title || '').toLowerCase().includes(q)).slice(0, 3);
-                if (matchedNotes.length > 0) {
-                    html += `<div class="px-2.5 py-1 pt-2 text-[10px] font-mono uppercase text-zinc-400">Studio Notes</div>`;
-                    html += matchedNotes.map(n => `
-                        <button onclick="${registerCallback(() => { this.closeCommandPalette(); this.openNoteById(n.id); })}" class="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-carbon-850 flex items-center justify-between text-xs transition">
-                            <span class="flex items-center space-x-2.5 truncate">
-                                <i class="fa-regular fa-file-lines text-indigo-400"></i>
-                                <span class="truncate text-zinc-800 dark:text-zinc-200">${this.escapeHTML(n.title)}</span>
-                            </span>
-                            <span class="text-[10px] font-mono text-zinc-400">${this.escapeHTML(n.category)}</span>
-                        </button>
-                    `).join('');
-                }
-
-                // Match Actions
-                const matchedActions = quickActions.filter(a => !q || a.label.toLowerCase().includes(q));
-                if (matchedActions.length > 0) {
-                    html += `<div class="px-2.5 py-1 pt-2 text-[10px] font-mono uppercase text-zinc-400">Quick Actions</div>`;
-                    html += matchedActions.map(a => `
-                        <button onclick="${registerCallback(a.action)}" class="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-carbon-850 flex items-center space-x-2.5 text-xs transition">
-                            <i class="${a.icon} w-4 text-center"></i>
-                            <span class="text-zinc-800 dark:text-zinc-200">${a.label}</span>
-                        </button>
-                    `).join('');
-                }
-
-                container.innerHTML = html || `<div class="p-6 text-center text-xs text-zinc-400">No matching results.</div>`;
-            },
-
-            /* ----------------------------------------------------------------
-               PORTABLE DATABASE SNAPSHOT EXPORT / IMPORT
-               ---------------------------------------------------------------- */
-            openBackupModal() {
-                this.refreshStorageTelemetry();
-                document.getElementById('backup-modal').classList.remove('hidden');
-            },
-
-            async exportDatabaseSnapshot() {
-                this.toast('Serializing IndexedDB snapshot...', 'info');
-                const serializedFiles = await Promise.all(this.files.map(async f => ({
-                    id: f.id,
-                    name: f.name,
-                    type: f.type,
-                    size: f.size,
-                    category: f.category,
-                    updatedAt: f.updatedAt,
-                    base64: await this.blobToBase64(f.blob)
-                })));
-
-                const payload = {
-                    app: 'SaidulCloudOS',
-                    exportedAt: Date.now(),
-                    files: serializedFiles,
-                    notes: this.notes,
-                    tasks: this.tasks
-                };
-
-                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `saidul-cloudos-snapshot-${new Date().toISOString().slice(0, 10)}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                this.toast('Snapshot exported successfully!', 'success');
-            },
-
-            async importDatabaseSnapshot(event) {
-                const file = event.target.files?.[0];
-                if (!file) return;
-                try {
-                    const text = await file.text();
-                    const parsed = JSON.parse(text);
-                    if (parsed.files) {
-                        for (const f of parsed.files) {
-                            const res = await fetch(f.base64);
-                            const blob = await res.blob();
-                            await CloudDB.put('files', {
-                                id: f.id,
-                                name: f.name,
-                                type: f.type,
-                                size: f.size,
-                                category: f.category,
-                                updatedAt: f.updatedAt,
-                                blob
-                            });
-                        }
-                    }
-                    if (parsed.notes) {
-                        for (const n of parsed.notes) await CloudDB.put('notes', n);
-                    }
-                    if (parsed.tasks) {
-                        for (const t of parsed.tasks) await CloudDB.put('tasks', t);
-                    }
-                    await this.loadAllFromIndexedDB();
-                    this.renderAll();
-                    await this.refreshStorageTelemetry();
-                    document.getElementById('backup-modal').classList.add('hidden');
-                    this.toast('Database snapshot restored!', 'success');
-                } catch (e) {
-                    this.toast('Invalid snapshot file.', 'error');
-                }
-            },
-
-            blobToBase64(blob) {
-                return new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(blob);
-                });
-            },
-
-            /* ----------------------------------------------------------------
-               GLOBAL SHORTCUTS, DRAG-AND-DROP & UTILITIES
-               ---------------------------------------------------------------- */
-            bindGlobalShortcutsAndDragDrop() {
-                // Ctrl+K / Cmd+K & Escape
-                window.addEventListener('keydown', (e) => {
-                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-                        e.preventDefault();
-                        this.openCommandPalette();
-                    } else if (e.key === 'Escape') {
-                        this.closeCommandPalette();
-                        this.closeFilePreview();
-                    }
-                });
-
-                // Window Drag & Drop Binary Uploader
-                const overlay = document.getElementById('global-drop-overlay');
-                let dragDepth = 0;
-
-                window.addEventListener('dragenter', (e) => {
-                    if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
-                        e.preventDefault();
-                        dragDepth++;
-                        overlay.classList.remove('hidden');
-                    }
-                });
-
-                window.addEventListener('dragover', (e) => {
-                    if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
-                        e.preventDefault();
-                    }
-                });
-
-                window.addEventListener('dragleave', (e) => {
-                    dragDepth--;
-                    if (dragDepth <= 0) {
-                        dragDepth = 0;
-                        overlay.classList.add('hidden');
-                    }
-                });
-
-                window.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    dragDepth = 0;
-                    overlay.classList.add('hidden');
-                    if (e.dataTransfer?.files?.length > 0) {
-                        this.handleFilesSelected(e.dataTransfer.files);
-                    }
-                });
-            },
-
-            initTheme() {
-                const saved = localStorage.getItem('saidul_cloudos_theme') || 'dark';
-                document.documentElement.classList.toggle('dark', saved === 'dark');
-                document.getElementById('theme-icon').className = saved === 'dark'
-                    ? 'fa-solid fa-sun text-amber-400'
-                    : 'fa-solid fa-moon text-zinc-600';
-            },
-
-            toggleTheme() {
-                const isDark = document.documentElement.classList.toggle('dark');
-                localStorage.setItem('saidul_cloudos_theme', isDark ? 'dark' : 'light');
-                document.getElementById('theme-icon').className = isDark
-                    ? 'fa-solid fa-sun text-amber-400'
-                    : 'fa-solid fa-moon text-zinc-600';
-            },
-
-            startLiveClock() {
-                const update = () => {
-                    const now = new Date();
-                    const el = document.getElementById('overview-clock');
-                    if (el) {
-                        el.textContent = `${now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()} • ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • INDEXEDDB READY`;
-                    }
-                };
-                update();
-                setInterval(update, 15000);
-            },
-
-            getFileIconClass(mime = '', name = '') {
-                const ext = (name.split('.').pop() || '').toLowerCase();
-                if (mime.startsWith('image/')) return 'fa-regular fa-file-image text-amber-500';
-                if (mime.startsWith('video/')) return 'fa-regular fa-file-video text-rose-500';
-                if (mime.startsWith('audio/')) return 'fa-regular fa-file-audio text-purple-500';
-                if (mime === 'application/pdf' || ext === 'pdf') return 'fa-regular fa-file-pdf text-rose-500';
-                if (['py', 'js', 'ts', 'html', 'css', 'json', 'cpp', 'java'].includes(ext)) return 'fa-regular fa-file-code text-emerald-500';
-                if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return 'fa-regular fa-file-zipper text-amber-600';
-                return 'fa-regular fa-file-lines text-indigo-500';
-            },
-
-            formatBytes(bytes) {
-                if (!bytes || bytes === 0) return '0 B';
-                const k = 1024;
-                const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(i > 1 ? 2 : 1)) + ' ' + sizes[i];
-            },
-
-            toast(msg, type = 'info') {
-                const stack = document.getElementById('toast-stack');
-                const el = document.createElement('div');
-                const colors = {
-                    success: 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-950',
-                    error: 'bg-rose-600 text-white',
-                    info: 'bg-zinc-900 dark:bg-zinc-800 text-white border border-zinc-700'
-                };
-                el.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold transition-all duration-200 ${colors[type] || colors.info}`;
-                el.textContent = msg;
-                stack.appendChild(el);
-                setTimeout(() => {
-                    el.style.opacity = '0';
-                    setTimeout(() => el.remove(), 200);
-                }, 2600);
-            },
-
-            escapeHTML(str) {
-                if (!str) return '';
-                return String(str)
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
-            }
-        };
-
-        window.addEventListener('DOMContentLoaded', () => {
-            CloudApp.init();
+    <div class="flex items-center space-x-3">
+      <span id="storage-mode-label">Storage: Cloud + Local Cache</span>
+      <span>UTF-8 • Markdown</span>
+    </div>
+  </footer>
+
+  <!-- ================= CUSTOM RIGHT-CLICK CONTEXT MENU ================= -->
+  <div id="context-menu" class="hidden fixed z-50 w-48 bg-white dark:bg-[#161f33] border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl py-1.5 text-xs">
+    <button onclick="openItemModal('folder')" class="w-full px-3 py-2 text-left hover:bg-sky-500/15 flex items-center gap-2.5">
+      <i class="fa-solid fa-folder-plus text-amber-400 w-4"></i><span>New Subfolder</span>
+    </button>
+    <button onclick="openItemModal('note')" class="w-full px-3 py-2 text-left hover:bg-sky-500/15 flex items-center gap-2.5">
+      <i class="fa-solid fa-file-circle-plus text-emerald-400 w-4"></i><span>New Markdown Note</span>
+    </button>
+    <div id="ctx-item-actions" class="hidden border-t border-slate-200 dark:border-slate-700/80 mt-1 pt-1">
+      <button onclick="renameSelectedItem()" class="w-full px-3 py-2 text-left hover:bg-sky-500/15 flex items-center gap-2.5">
+        <i class="fa-solid fa-i-cursor text-sky-400 w-4"></i><span>Rename</span>
+      </button>
+      <button onclick="deleteSelectedItem()" class="w-full px-3 py-2 text-left hover:bg-rose-500/15 text-rose-400 flex items-center gap-2.5">
+        <i class="fa-solid fa-trash-can w-4"></i><span>Delete</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: CREATE FOLDER / NOTE ================= -->
+  <div id="item-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#141d30] border border-slate-200 dark:border-slate-700 rounded-xl max-w-lg w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="modal-title" class="text-sm font-bold flex items-center gap-2">
+          <i class="fa-solid fa-folder-plus text-amber-400"></i>
+          <span>Create New Item</span>
+        </h3>
+        <button onclick="closeItemModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-medium text-slate-400 block mb-1">Name / Title</label>
+          <input id="modal-item-name" type="text" placeholder="e.g., Class X, Science, or Chapter 1 Notes" class="w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:border-sky-500" />
+        </div>
+
+        <div id="modal-note-content-wrap" class="hidden">
+          <label class="text-xs font-medium text-slate-400 block mb-1">Note Content (Markdown Supported)</label>
+          <textarea id="modal-item-content" rows="8" placeholder="# Topic Heading&#10;&#10;Write key formulas, definitions, and study points..." class="w-full p-3 rounded-lg bg-slate-100 dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700 font-mono text-xs focus:outline-none focus:border-sky-500"></textarea>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeItemModal()" class="px-3.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs">Cancel</button>
+        <button onclick="confirmCreateItem()" class="px-4 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold">Create & Sync</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: CLOUD DATABASE SETTINGS ================= -->
+  <div id="cloud-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#141d30] border border-slate-200 dark:border-slate-700 rounded-xl max-w-lg w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold flex items-center gap-2">
+          <i class="fa-solid fa-cloud text-sky-400"></i>
+          <span>Global Online Cloud Database Setup (Supabase REST)</span>
+        </h3>
+        <button onclick="closeCloudModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-relaxed">
+        Connect a free <strong>Supabase</strong> project so every folder and note you create is stored online and accessible to anyone visiting your website URL worldwide.
+      </p>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-medium text-slate-300 block mb-1">Supabase Project URL</label>
+          <input id="cfg-supabase-url" type="text" placeholder="https://xyzcompany.supabase.co" class="w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-sky-500" />
+        </div>
+        <div>
+          <label class="font-medium text-slate-300 block mb-1">Supabase Public Anon Key</label>
+          <input id="cfg-supabase-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-sky-500" />
+        </div>
+        <div>
+          <label class="font-medium text-slate-300 block mb-1">Admin Password (for creating/editing notes)</label>
+          <input id="cfg-admin-pass" type="password" placeholder="Default: admin123" class="w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-sky-500" />
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center pt-2">
+        <span class="text-[11px] text-slate-400">Table name: <code>explorer_nodes</code></span>
+        <div class="flex gap-2">
+          <button onclick="closeCloudModal()" class="px-3.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs">Close</button>
+          <button onclick="saveCloudConfig()" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold">Save & Connect</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= APPLICATION JAVASCRIPT ================= -->
+  <script>
+    /**
+     * 1. HARDCODED CLOUD CONFIG (Optional: Paste your Supabase credentials here
+     *    before deploying to GitHub Pages/Vercel so all visitors auto-connect!)
+     */
+    const DEFAULT_CLOUD_CONFIG = {
+      supabaseUrl: "", // e.g., "https://your-project.supabase.co"
+      supabaseKey: "", // e.g., "eyJhbGciOiJIUzI1NiIs..."
+      adminPass: "saidul123" // Default Admin password
+    };
+
+    // Starter Hierarchical Nodes (Class X -> Subjects -> Chapters -> Notes)
+    const INITIAL_NODES = [
+      { id: "fld-class10", parentId: null, type: "folder", name: "Class X (SEBA Board)", updatedAt: "2026-11-10" },
+      { id: "fld-science", parentId: "fld-class10", type: "folder", name: "General Science", updatedAt: "2026-11-10" },
+      { id: "fld-bio", parentId: "fld-science", type: "folder", name: "Biology", updatedAt: "2026-11-10" },
+      { id: "fld-math", parentId: "fld-class10", type: "folder", name: "Mathematics", updatedAt: "2026-11-10" },
+      { id: "fld-sst", parentId: "fld-class10", type: "folder", name: "Social Science (History & Geo)", updatedAt: "2026-11-10" },
+      { id: "fld-cs", parentId: "fld-class10", type: "folder", name: "Computer Science & AI", updatedAt: "2026-11-10" },
+      {
+        id: "note-neuro",
+        parentId: "fld-bio",
+        type: "note",
+        name: "Ch 7 - Control & Coordination.md",
+        updatedAt: "2026-11-10",
+        content: `# Chapter 7: Control and Coordination\n\n## 1. Nervous System & Receptors\nSpecialized tips of nerve cells detect information from our environment:\n- **Photoreceptors:** Detect light (Eyes)\n- **Olfactory Receptors:** Detect smell (Nose)\n- **Gustatory Receptors:** Detect taste (Tongue)\n- **Phonoreceptors:** Detect sound (Inner Ear)\n\n## 2. Synaptic Chemical Transmission\n> **Crucial Exam Concept:** Inside the neuron, the impulse travels as an **electrical signal** along the axon. However, at the **synapse** (the microscopic gap between two neurons), transmission is **chemical**, not electrical.\n\n1. Electrical impulse reaches the **axon terminal**.\n2. It triggers the release of chemical messengers called **Neurotransmitters** (such as Acetylcholine) into the synaptic cleft.\n3. These chemicals cross the gap and bind to receptors on the **dendrite** of the next neuron, starting a new electrical impulse.`
+      },
+      {
+        id: "note-trig",
+        parentId: "fld-math",
+        type: "note",
+        name: "Ch 8 - Trigonometry Identities.md",
+        updatedAt: "2026-11-10",
+        content: `# Introduction to Trigonometry\n\n## Three Core Pythagorean Identities\n| Identity Formula | Rearranged Form |\n|---|---|\n| $\\sin^2\\theta + \\cos^2\\theta = 1$ | $\\sin^2\\theta = 1 - \\cos^2\\theta$ |\n| $1 + \\tan^2\\theta = \\sec^2\\theta$ | $\\sec^2\\theta - \\tan^2\\theta = 1$ |\n| $1 + \\cot^2\\theta = \\csc^2\\theta$ | $\\csc^2\\theta - \\cot^2\\theta = 1$ |`
+      }
+    ];
+
+    // Application State
+    let nodes = [];
+    let currentFolderId = null;
+    let activeNoteId = null;
+    let expandedFolders = new Set(["fld-class10", "fld-science", "fld-bio"]);
+    let viewMode = "grid"; // 'grid' | 'list'
+    let isAdmin = false;
+    let modalMode = "folder"; // 'folder' | 'note'
+    let contextTargetId = null;
+    let searchQuery = "";
+
+    // Load Cloud Credentials
+    function getCloudConfig() {
+      const saved = JSON.parse(localStorage.getItem("cloud_explorer_cfg") || "{}");
+      return {
+        supabaseUrl: saved.supabaseUrl || DEFAULT_CLOUD_CONFIG.supabaseUrl,
+        supabaseKey: saved.supabaseKey || DEFAULT_CLOUD_CONFIG.supabaseKey,
+        adminPass: saved.adminPass || DEFAULT_CLOUD_CONFIG.adminPass
+      };
+    }
+
+    // Initialize Platform
+    async function initApp() {
+      const cached = localStorage.getItem("cloud_explorer_nodes");
+      nodes = cached ? JSON.parse(cached) : INITIAL_NODES;
+      renderAll();
+      await syncFromCloud(false);
+
+      // Hide context menu on click anywhere
+      window.addEventListener("click", () => {
+        document.getElementById("context-menu").classList.add("hidden");
+      });
+    }
+
+    // ================= CLOUD DATABASE ENGINE (SUPABASE REST API) =================
+    async function syncFromCloud(showNotification = false) {
+      const cfg = getCloudConfig();
+      const statusText = document.getElementById("cloud-status-text");
+
+      if (!cfg.supabaseUrl || !cfg.supabaseKey) {
+        statusText.textContent = "Local Cache (Set Cloud Keys)";
+        return;
+      }
+
+      try {
+        statusText.textContent = "Syncing Cloud...";
+        const res = await fetch(`${cfg.supabaseUrl}/rest/v1/explorer_nodes?select=*&order=name.asc`, {
+          headers: {
+            apikey: cfg.supabaseKey,
+            Authorization: `Bearer ${cfg.supabaseKey}`
+          }
         });
-    </script>
+
+        if (!res.ok) throw new Error("Cloud fetch failed");
+        const cloudData = await res.json();
+
+        if (Array.isArray(cloudData) && cloudData.length > 0) {
+          nodes = cloudData;
+          localStorage.setItem("cloud_explorer_nodes", JSON.stringify(nodes));
+        } else if (Array.isArray(cloudData) && cloudData.length === 0) {
+          // Seed initial nodes to Cloud if database table is empty
+          await pushAllNodesToCloud(INITIAL_NODES);
+        }
+
+        statusText.textContent = "Live Cloud Connected";
+        renderAll();
+      } catch (err) {
+        console.warn("Cloud Sync Warning:", err);
+        statusText.textContent = "Offline / Cache Mode";
+      }
+    }
+
+    async function upsertNodeToCloud(node) {
+      localStorage.setItem("cloud_explorer_nodes", JSON.stringify(nodes));
+      const cfg = getCloudConfig();
+      if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
+
+      try {
+        await fetch(`${cfg.supabaseUrl}/rest/v1/explorer_nodes`, {
+          method: "POST",
+          headers: {
+            apikey: cfg.supabaseKey,
+            Authorization: `Bearer ${cfg.supabaseKey}`,
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates"
+          },
+          body: JSON.stringify(node)
+        });
+      } catch (e) {
+        console.error("Failed to push node to cloud:", e);
+      }
+    }
+
+    async function deleteNodeFromCloud(idsToDelete) {
+      localStorage.setItem("cloud_explorer_nodes", JSON.stringify(nodes));
+      const cfg = getCloudConfig();
+      if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
+
+      try {
+        const idFilter = `(${idsToDelete.map(id => `"${id}"`).join(",")})`;
+        await fetch(`${cfg.supabaseUrl}/rest/v1/explorer_nodes?id=in.${idFilter}`, {
+          method: "DELETE",
+          headers: {
+            apikey: cfg.supabaseKey,
+            Authorization: `Bearer ${cfg.supabaseKey}`
+          }
+        });
+      } catch (e) {
+        console.error("Cloud delete error:", e);
+      }
+    }
+
+    async function pushAllNodesToCloud(nodeArray) {
+      const cfg = getCloudConfig();
+      if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
+      try {
+        await fetch(`${cfg.supabaseUrl}/rest/v1/explorer_nodes`, {
+          method: "POST",
+          headers: {
+            apikey: cfg.supabaseKey,
+            Authorization: `Bearer ${cfg.supabaseKey}`,
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates"
+          },
+          body: JSON.stringify(nodeArray)
+        });
+      } catch (e) {}
+    }
+
+    // ================= RENDERING ENGINE =================
+    function renderAll() {
+      renderTree();
+      renderBreadcrumbs();
+      renderExplorerItems();
+      updateAdminUI();
+    }
+
+    // 1. Recursive Sidebar Directory Tree
+    function renderTree() {
+      const container = document.getElementById("tree-container");
+      const rootHtml = `
+        <div onclick="navigateTo(null)" class="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition ${
+          currentFolderId === null ? "bg-sky-500/20 text-sky-400 font-semibold" : "hover:bg-slate-200/70 dark:hover:bg-slate-800/70"
+        }">
+          <i class="fa-solid fa-laptop text-sky-400 w-4 text-center"></i>
+          <span class="truncate">This PC (Root Drive)</span>
+        </div>
+      `;
+      container.innerHTML = rootHtml + buildTreeLevel(null, 1);
+    }
+
+    function buildTreeLevel(parentId, depth) {
+      const children = nodes.filter(n => n.parentId === parentId);
+      if (children.length === 0) return "";
+
+      // Sort folders first, then notes alphabetically
+      children.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name) : a.type === "folder" ? -1 : 1));
+
+      return children
+        .map(item => {
+          const indent = depth * 12;
+          if (item.type === "folder") {
+            const isExpanded = expandedFolders.has(item.id);
+            const isSelected = currentFolderId === item.id;
+            const hasChildren = nodes.some(n => n.parentId === item.id);
+
+            return `
+              <div>
+                <div
+                  onclick="handleTreeFolderClick(event, '${item.id}')"
+                  class="flex items-center gap-1.5 py-1.5 pr-2 rounded-md cursor-pointer transition ${
+                    isSelected ? "bg-sky-500/20 text-sky-400 font-semibold" : "hover:bg-slate-200/60 dark:hover:bg-slate-800/60"
+                  }"
+                  style="padding-left: ${indent}px"
+                >
+                  <i onclick="toggleFolderCollapse(event, '${item.id}')" class="fa-solid ${
+                    hasChildren ? (isExpanded ? "fa-chevron-down" : "fa-chevron-right") : "fa-minus opacity-20"
+                  } text-[10px] w-3 text-center text-slate-400 hover:text-sky-400"></i>
+                  <i class="fa-solid ${isExpanded ? "fa-folder-open" : "fa-folder"} text-amber-400 text-xs"></i>
+                  <span class="truncate">${escapeHtml(item.name)}</span>
+                </div>
+                ${isExpanded ? buildTreeLevel(item.id, depth + 1) : ""}
+              </div>
+            `;
+          } else {
+            const isActive = activeNoteId === item.id;
+            return `
+              <div
+                onclick="openNote('${item.id}')"
+                class="flex items-center gap-1.5 py-1.5 pr-2 rounded-md cursor-pointer transition ${
+                  isActive ? "bg-emerald-500/20 text-emerald-400 font-semibold" : "text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
+                }"
+                style="padding-left: ${indent + 14}px"
+              >
+                <i class="fa-solid fa-file-lines text-sky-400 text-xs"></i>
+                <span class="truncate">${escapeHtml(item.name)}</span>
+              </div>
+            `;
+          }
+        })
+        .join("");
+    }
+
+    // 2. Breadcrumb Navigation
+    function renderBreadcrumbs() {
+      const bar = document.getElementById("breadcrumb-bar");
+      const path = [];
+      let pointer = currentFolderId;
+
+      while (pointer) {
+        const folder = nodes.find(n => n.id === pointer);
+        if (folder) {
+          path.unshift(folder);
+          pointer = folder.parentId;
+        } else {
+          break;
+        }
+      }
+
+      let html = `
+        <button onclick="navigateTo(null)" class="px-2 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 flex items-center gap-1 font-medium text-sky-500 shrink-0">
+          <i class="fa-solid fa-hard-drive text-[11px]"></i>
+          <span>Home</span>
+        </button>
+      `;
+
+      path.forEach(folder => {
+        html += `
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 shrink-0"></i>
+          <button onclick="navigateTo('${folder.id}')" class="px-2 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 truncate max-w-[150px] font-medium shrink-0">
+            ${escapeHtml(folder.name)}
+          </button>
+        `;
+      });
+
+      bar.innerHTML = html;
+      document.getElementById("btn-up").disabled = currentFolderId === null;
+
+      // Update Header & Status Bar
+      const currentFolder = nodes.find(n => n.id === currentFolderId);
+      document.getElementById("current-folder-title").innerHTML = currentFolder
+        ? `<i class="fa-solid fa-folder-open text-amber-400"></i><span>${escapeHtml(currentFolder.name)}</span>`
+        : `<i class="fa-solid fa-hard-drive text-sky-400"></i><span>Home Drive</span>`;
+
+      const fullPathString = "/Home" + (path.length ? "/" + path.map(p => p.name).join("/") : "");
+      document.getElementById("status-path").textContent = `Path: ${fullPathString}`;
+    }
+
+    // 3. Main Explorer Area (Grid & List Views)
+    function renderExplorerItems() {
+      const container = document.getElementById("items-container");
+      let visibleItems = [];
+
+      if (searchQuery.trim() !== "") {
+        const q = searchQuery.toLowerCase();
+        visibleItems = nodes.filter(
+          n => n.name.toLowerCase().includes(q) || (n.content && n.content.toLowerCase().includes(q))
+        );
+      } else {
+        visibleItems = nodes.filter(n => n.parentId === currentFolderId);
+      }
+
+      visibleItems.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name) : a.type === "folder" ? -1 : 1));
+      document.getElementById("status-item-count").textContent = `${visibleItems.length} item(s)`;
+
+      if (visibleItems.length === 0) {
+        container.innerHTML = `
+          <div class="border border-dashed border-slate-300 dark:border-slate-800 rounded-xl p-12 text-center my-4">
+            <i class="fa-solid fa-folder-open text-3xl text-slate-400 mb-3"></i>
+            <p class="text-sm font-semibold">This folder is empty</p>
+            <p class="text-xs text-slate-400 mt-1">${
+              isAdmin
+                ? "Click '+ New Folder' or '+ New Note' on the top ribbon (or right-click) to add content."
+                : "Switch to Admin Login at the top right to create folders or upload notes here."
+            }</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (viewMode === "grid") {
+        container.innerHTML = `
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            ${visibleItems
+              .map(item => {
+                const isFolder = item.type === "folder";
+                const childCount = isFolder ? nodes.filter(n => n.parentId === item.id).length : 0;
+                return `
+                  <div
+                    onclick="${isFolder ? `navigateTo('${item.id}')` : `openNote('${item.id}')`}"
+                    oncontextmenu="handleItemContextMenu(event, '${item.id}')"
+                    class="group relative p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/90 bg-slate-50/60 dark:bg-[#121929] hover:bg-sky-500/10 hover:border-sky-500/40 cursor-pointer transition flex flex-col justify-between"
+                  >
+                    <div class="flex items-start justify-between">
+                      <div class="w-10 h-10 rounded-lg flex items-center justify-center ${
+                        isFolder ? "bg-amber-500/15 text-amber-400" : "bg-sky-500/15 text-sky-400"
+                      }">
+                        <i class="fa-solid ${isFolder ? "fa-folder text-xl" : "fa-file-lines text-xl"}"></i>
+                      </div>
+                      <span class="text-[10px] px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                        ${isFolder ? `${childCount} items` : "Markdown"}
+                      </span>
+                    </div>
+                    <div class="mt-3">
+                      <h4 class="text-xs font-semibold truncate group-hover:text-sky-400 transition">${escapeHtml(item.name)}</h4>
+                      <p class="text-[10px] text-slate-400 mt-0.5">${item.updatedAt || "Synced"}</p>
+                    </div>
+                  </div>
+                `;
+              })
+              .join("")}
+          </div>
+        `;
+      } else {
+        // Windows Details Table View
+        container.innerHTML = `
+          <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 dark:bg-[#121929] text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th class="py-2.5 px-3">Name</th>
+                  <th class="py-2.5 px-3 hidden sm:table-cell">Type</th>
+                  <th class="py-2.5 px-3 hidden md:table-cell">Date Modified</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800/70">
+                ${visibleItems
+                  .map(item => {
+                    const isFolder = item.type === "folder";
+                    return `
+                      <tr
+                        onclick="${isFolder ? `navigateTo('${item.id}')` : `openNote('${item.id}')`}"
+                        oncontextmenu="handleItemContextMenu(event, '${item.id}')"
+                        class="hover:bg-sky-500/10 cursor-pointer transition"
+                      >
+                        <td class="py-2.5 px-3 font-medium flex items-center gap-2.5">
+                          <i class="fa-solid ${isFolder ? "fa-folder text-amber-400" : "fa-file-lines text-sky-400"} text-sm"></i>
+                          <span>${escapeHtml(item.name)}</span>
+                        </td>
+                        <td class="py-2.5 px-3 text-slate-400 hidden sm:table-cell">${isFolder ? "File Folder" : "Markdown Note"}</td>
+                        <td class="py-2.5 px-3 text-slate-400 hidden md:table-cell">${item.updatedAt || "2026-11-10"}</td>
+                      </tr>
+                    `;
+                  })
+                  .join("")}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    // ================= NAVIGATION & NOTE VIEWER =================
+    function navigateTo(folderId) {
+      currentFolderId = folderId;
+      if (folderId) expandedFolders.add(folderId);
+      renderAll();
+    }
+
+    function navigateUp() {
+      if (!currentFolderId) return;
+      const current = nodes.find(n => n.id === currentFolderId);
+      navigateTo(current ? current.parentId : null);
+    }
+
+    function handleTreeFolderClick(e, folderId) {
+      e.stopPropagation();
+      expandedFolders.add(folderId);
+      navigateTo(folderId);
+    }
+
+    function toggleFolderCollapse(e, folderId) {
+      e.stopPropagation();
+      if (expandedFolders.has(folderId)) expandedFolders.delete(folderId);
+      else expandedFolders.add(folderId);
+      renderTree();
+    }
+
+    function expandAllFolders() {
+      nodes.filter(n => n.type === "folder").forEach(f => expandedFolders.add(f.id));
+      renderTree();
+    }
+
+    function openNote(noteId) {
+      const note = nodes.find(n => n.id === noteId);
+      if (!note) return;
+      activeNoteId = noteId;
+
+      const readerPane = document.getElementById("reader-pane");
+      readerPane.classList.remove("hidden");
+      readerPane.classList.add("flex");
+
+      document.getElementById("reader-title").textContent = note.name;
+      document.getElementById("reader-updated").textContent = `Updated: ${note.updatedAt || "Live"}`;
+      document.getElementById("reader-content").innerHTML = marked.parse(note.content || "*Empty note*");
+
+      // Ensure Editor is closed initially when opening a note
+      document.getElementById("editor-container").classList.add("hidden");
+      document.getElementById("editor-container").classList.remove("flex");
+      document.getElementById("reader-content").classList.remove("hidden");
+
+      renderTree();
+    }
+
+    function closeReaderPane() {
+      activeNoteId = null;
+      const readerPane = document.getElementById("reader-pane");
+      readerPane.classList.add("hidden");
+      readerPane.classList.remove("flex");
+      renderTree();
+    }
+
+    // ================= ADMIN ROLE & CRUD OPERATIONS =================
+    function handleAdminToggle() {
+      if (isAdmin) {
+        isAdmin = false;
+        updateAdminUI();
+        return;
+      }
+      const pass = prompt("Enter Admin Password to unlock Folder & Note creation (Default: saidul123):");
+      if (pass === null) return;
+      const cfg = getCloudConfig();
+      if (pass === cfg.adminPass) {
+        isAdmin = true;
+        updateAdminUI();
+      } else {
+        alert("Incorrect Admin Password!");
+      }
+    }
+
+    function updateAdminUI() {
+      const roleBadge = document.getElementById("role-indicator");
+      const adminBtnText = document.getElementById("admin-btn-text");
+      const lockIcon = document.getElementById("admin-lock-icon");
+      const adminControls = ["cmd-new-folder", "cmd-new-note", "cmd-upload-md", "admin-divider", "btn-edit-note"];
+
+      if (isAdmin) {
+        roleBadge.innerHTML = `<i class="fa-solid fa-shield-halved text-emerald-400"></i><span class="text-emerald-400 font-semibold">Admin Mode</span>`;
+        adminBtnText.textContent = "Exit Admin";
+        lockIcon.className = "fa-solid fa-lock-open text-[11px]";
+        adminControls.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.classList.remove("hidden");
+            el.classList.add("flex");
+          }
+        });
+      } else {
+        roleBadge.innerHTML = `<i class="fa-solid fa-eye text-sky-400"></i><span>Public View</span>`;
+        adminBtnText.textContent = "Admin Login";
+        lockIcon.className = "fa-solid fa-lock text-[11px]";
+        adminControls.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.classList.add("hidden");
+            el.classList.remove("flex");
+          }
+        });
+      }
+      renderExplorerItems();
+    }
+
+    function openItemModal(type) {
+      if (!isAdmin) return alert("Please login to Admin Mode first!");
+      modalMode = type;
+      document.getElementById("item-modal").classList.remove("hidden");
+      document.getElementById("modal-item-name").value = "";
+      document.getElementById("modal-item-content").value = "";
+
+      if (type === "folder") {
+        document.getElementById("modal-title").innerHTML = `<i class="fa-solid fa-folder-plus text-amber-400"></i><span>New Subfolder</span>`;
+        document.getElementById("modal-note-content-wrap").classList.add("hidden");
+      } else {
+        document.getElementById("modal-title").innerHTML = `<i class="fa-solid fa-file-circle-plus text-emerald-400"></i><span>New Markdown Note</span>`;
+        document.getElementById("modal-note-content-wrap").classList.remove("hidden");
+      }
+      document.getElementById("modal-item-name").focus();
+    }
+
+    function closeItemModal() {
+      document.getElementById("item-modal").classList.add("hidden");
+    }
+
+    async function confirmCreateItem() {
+      let name = document.getElementById("modal-item-name").value.trim();
+      if (!name) return alert("Please enter a name!");
+      if (modalMode === "note" && !name.endsWith(".md")) name += ".md";
+
+      const newNode = {
+        id: (modalMode === "folder" ? "fld-" : "note-") + Date.now(),
+        parentId: currentFolderId,
+        type: modalMode,
+        name,
+        updatedAt: new Date().toISOString().split("T")[0],
+        content: modalMode === "note" ? document.getElementById("modal-item-content").value : undefined
+      };
+
+      nodes.push(newNode);
+      closeItemModal();
+      renderAll();
+      if (modalMode === "note") openNote(newNode.id);
+      await upsertNodeToCloud(newNode);
+    }
+
+    function toggleNoteEditor() {
+      if (!isAdmin || !activeNoteId) return;
+      const note = nodes.find(n => n.id === activeNoteId);
+      if (!note) return;
+
+      const editor = document.getElementById("editor-container");
+      const reader = document.getElementById("reader-content");
+
+      if (editor.classList.contains("hidden")) {
+        editor.classList.remove("hidden");
+        editor.classList.add("flex");
+        reader.classList.add("hidden");
+        document.getElementById("edit-note-title").value = note.name;
+        document.getElementById("edit-note-body").value = note.content || "";
+      } else {
+        editor.classList.add("hidden");
+        editor.classList.remove("flex");
+        reader.classList.remove("hidden");
+      }
+    }
+
+    async function saveEditedNote() {
+      const note = nodes.find(n => n.id === activeNoteId);
+      if (!note) return;
+
+      note.name = document.getElementById("edit-note-title").value.trim() || note.name;
+      note.content = document.getElementById("edit-note-body").value;
+      note.updatedAt = new Date().toISOString().split("T")[0];
+
+      openNote(note.id);
+      renderAll();
+      await upsertNodeToCloud(note);
+    }
+
+    function insertMd(snippet) {
+      const textarea = document.getElementById("edit-note-body");
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      textarea.value = textarea.value.substring(0, start) + snippet + textarea.value.substring(end);
+      textarea.focus();
+    }
+
+    // Upload .md or .txt files directly from device
+    function handleFileUpload(event) {
+      if (!isAdmin) return;
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async e => {
+        const newNode = {
+          id: "note-" + Date.now(),
+          parentId: currentFolderId,
+          type: "note",
+          name: file.name,
+          updatedAt: new Date().toISOString().split("T")[0],
+          content: e.target.result
+        };
+        nodes.push(newNode);
+        renderAll();
+        openNote(newNode.id);
+        await upsertNodeToCloud(newNode);
+      };
+      reader.readAsText(file);
+    }
+
+    // Right-Click Context Menu Handlers
+    function handleWorkspaceContextMenu(e) {
+      if (!isAdmin) return;
+      e.preventDefault();
+      contextTargetId = null;
+      document.getElementById("ctx-item-actions").classList.add("hidden");
+      showContextMenu(e.clientX, e.clientY);
+    }
+
+    function handleItemContextMenu(e, itemId) {
+      if (!isAdmin) return;
+      e.preventDefault();
+      e.stopPropagation();
+      contextTargetId = itemId;
+      document.getElementById("ctx-item-actions").classList.remove("hidden");
+      showContextMenu(e.clientX, e.clientY);
+    }
+
+    function showContextMenu(x, y) {
+      const menu = document.getElementById("context-menu");
+      menu.style.left = `${Math.min(x, window.innerWidth - 200)}px`;
+      menu.style.top = `${Math.min(y, window.innerHeight - 160)}px`;
+      menu.classList.remove("hidden");
+    }
+
+    async function renameSelectedItem() {
+      if (!contextTargetId) return;
+      const item = nodes.find(n => n.id === contextTargetId);
+      if (!item) return;
+      const newName = prompt("Rename item:", item.name);
+      if (newName && newName.trim()) {
+        item.name = newName.trim();
+        item.updatedAt = new Date().toISOString().split("T")[0];
+        renderAll();
+        await upsertNodeToCloud(item);
+      }
+    }
+
+    async function deleteSelectedItem() {
+      if (!contextTargetId) return;
+      const item = nodes.find(n => n.id === contextTargetId);
+      if (!item) return;
+      if (!confirm(`Delete "${item.name}" and all its nested contents permanently?`)) return;
+
+      // Collect recursive descendant IDs
+      const idsToRemove = [item.id];
+      const collectChildren = parentId => {
+        nodes.filter(n => n.parentId === parentId).forEach(child => {
+          idsToRemove.push(child.id);
+          if (child.type === "folder") collectChildren(child.id);
+        });
+      };
+      collectChildren(item.id);
+
+      nodes = nodes.filter(n => !idsToRemove.includes(n.id));
+      if (idsToRemove.includes(activeNoteId)) closeReaderPane();
+      renderAll();
+      await deleteNodeFromCloud(idsToRemove);
+    }
+
+    // ================= UTILITIES & SETTINGS =================
+    function setViewMode(mode) {
+      viewMode = mode;
+      document.getElementById("view-grid-btn").className =
+        mode === "grid"
+          ? "px-2.5 py-1 rounded text-xs font-medium bg-white dark:bg-slate-800 shadow-sm text-sky-500 transition"
+          : "px-2.5 py-1 rounded text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition";
+      document.getElementById("view-list-btn").className =
+        mode === "list"
+          ? "px-2.5 py-1 rounded text-xs font-medium bg-white dark:bg-slate-800 shadow-sm text-sky-500 transition"
+          : "px-2.5 py-1 rounded text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition";
+      renderExplorerItems();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val;
+      document.getElementById("clear-search-btn").classList.toggle("hidden", !val);
+      renderExplorerItems();
+    }
+
+    function clearSearch() {
+      document.getElementById("search-input").value = "";
+      handleSearch("");
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const icon = document.getElementById("theme-icon");
+      html.classList.toggle("dark");
+      html.classList.toggle("light");
+      icon.className = html.classList.contains("dark")
+        ? "fa-solid fa-sun text-xs text-amber-400"
+        : "fa-solid fa-moon text-xs text-slate-700";
+    }
+
+    function toggleMobileSidebar() {
+      document.getElementById("sidebar-tree").classList.toggle("-translate-x-full");
+    }
+
+    function openCloudModal() {
+      const cfg = getCloudConfig();
+      document.getElementById("cfg-supabase-url").value = cfg.supabaseUrl;
+      document.getElementById("cfg-supabase-key").value = cfg.supabaseKey;
+      document.getElementById("cfg-admin-pass").value = cfg.adminPass;
+      document.getElementById("cloud-modal").classList.remove("hidden");
+    }
+
+    function closeCloudModal() {
+      document.getElementById("cloud-modal").classList.add("hidden");
+    }
+
+    async function saveCloudConfig() {
+      const supabaseUrl = document.getElementById("cfg-supabase-url").value.trim().replace(/\/$/, "");
+      const supabaseKey = document.getElementById("cfg-supabase-key").value.trim();
+      const adminPass = document.getElementById("cfg-admin-pass").value.trim() || "saidul123";
+
+      localStorage.setItem("cloud_explorer_cfg", JSON.stringify({ supabaseUrl, supabaseKey, adminPass }));
+      closeCloudModal();
+      await syncFromCloud(true);
+    }
+
+    function downloadActiveNote() {
+      const note = nodes.find(n => n.id === activeNoteId);
+      if (!note) return;
+      const blob = new Blob([note.content || ""], { type: "text/markdown" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = note.name;
+      a.click();
+    }
+
+    function exportFullDatabase() {
+      const blob = new Blob([JSON.stringify(nodes, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "cloud-explorer-backup.json";
+      a.click();
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+    }
+
+    window.addEventListener("DOMContentLoaded", initApp);
+  </script>
 </body>
 </html>
