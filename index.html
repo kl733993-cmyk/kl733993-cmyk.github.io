@@ -1,1 +1,2578 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Saidul's Dashboard — Ultimate Student & Productivity Workspace</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        dark: {
+                            950: '#07090e',
+                            900: '#0c1017',
+                            850: '#111622',
+                            800: '#161d2b',
+                            700: '#212b3f',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ==========================================================================
+           CUSTOM DESIGN TOKENS & DYNAMIC ACCENT ENGINE
+           ========================================================================== */
+        :root {
+            --accent-500: #6366f1;
+            --accent-600: #4f46e5;
+            --accent-400: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.16);
+            --accent-border: rgba(99, 102, 241, 0.35);
+        }
+
+        [data-accent="indigo"] {
+            --accent-500: #6366f1;
+            --accent-600: #4f46e5;
+            --accent-400: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.16);
+            --accent-border: rgba(99, 102, 241, 0.38);
+        }
+        [data-accent="emerald"] {
+            --accent-500: #10b981;
+            --accent-600: #059669;
+            --accent-400: #34d399;
+            --accent-glow: rgba(16, 185, 129, 0.16);
+            --accent-border: rgba(16, 185, 129, 0.38);
+        }
+        [data-accent="rose"] {
+            --accent-500: #f43f5e;
+            --accent-600: #e11d48;
+            --accent-400: #fb7185;
+            --accent-glow: rgba(244, 63, 94, 0.16);
+            --accent-border: rgba(244, 63, 94, 0.38);
+        }
+        [data-accent="amber"] {
+            --accent-500: #f59e0b;
+            --accent-600: #d97706;
+            --accent-400: #fbbf24;
+            --accent-glow: rgba(245, 158, 11, 0.16);
+            --accent-border: rgba(245, 158, 11, 0.38);
+        }
+        [data-accent="cyan"] {
+            --accent-500: #06b6d4;
+            --accent-600: #0891b2;
+            --accent-400: #22d3ee;
+            --accent-glow: rgba(6, 182, 212, 0.16);
+            --accent-border: rgba(6, 182, 212, 0.38);
+        }
+
+        /* Accent Utility Classes */
+        .bg-accent { background-color: var(--accent-600); }
+        .bg-accent:hover { background-color: var(--accent-500); }
+        .bg-accent-soft { background-color: var(--accent-glow); }
+        .text-accent { color: var(--accent-400); }
+        .light .text-accent { color: var(--accent-600); }
+        .border-accent { border-color: var(--accent-border); }
+        .ring-accent:focus {
+            outline: none;
+            border-color: var(--accent-500);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Smooth Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.25);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.45);
+        }
+
+        /* Glassmorphism & Card Polish */
+        .glass-panel {
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+        .card-hover {
+            transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-border);
+        }
+
+        /* Module Transition Animation */
+        .module-view {
+            animation: fadeSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Range Slider */
+        input[type="range"].accent-slider {
+            accent-color: var(--accent-500);
+        }
+
+        /* Collapsed Sidebar Styles on Desktop */
+        @media (min-width: 1024px) {
+            aside.sidebar-collapsed {
+                width: 5rem !important;
+            }
+            aside.sidebar-collapsed .sidebar-label,
+            aside.sidebar-collapsed .sidebar-badge,
+            aside.sidebar-collapsed .sidebar-footer-details {
+                display: none !important;
+            }
+            aside.sidebar-collapsed .sidebar-item {
+                justify-content: center;
+                padding-left: 0;
+                padding-right: 0;
+            }
+            aside.sidebar-collapsed .sidebar-brand-wrapper {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body data-accent="indigo" class="bg-slate-50 dark:bg-dark-950 text-slate-800 dark:text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white overflow-x-hidden">
+
+    <!-- ==========================================================================
+         APP SHELL LAYOUT
+         ========================================================================== -->
+    <div class="flex h-screen w-screen overflow-hidden">
+
+        <!-- DESKTOP SIDEBAR -->
+        <aside id="desktop-sidebar" class="hidden lg:flex flex-col w-64 bg-white dark:bg-dark-900 border-r border-slate-200/80 dark:border-slate-800/80 transition-all duration-200 select-none z-30 shrink-0">
+            <!-- Brand Header -->
+            <div class="h-16 px-4 flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800/70 sidebar-brand-wrapper">
+                <div class="flex items-center space-x-3 overflow-hidden">
+                    <div class="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-white font-bold shadow-lg shrink-0">
+                        <i class="fa-solid fa-bolt-lightning text-sm"></i>
+                    </div>
+                    <div class="sidebar-label truncate">
+                        <h1 class="font-bold text-sm tracking-tight text-slate-900 dark:text-white leading-tight" id="sidebar-owner-name">Saidul's OS</h1>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate" id="sidebar-owner-role">Class X • Workspace</p>
+                    </div>
+                </div>
+                <button onclick="App.toggleSidebarCollapse()" title="Toggle Sidebar (Ctrl+B)" class="sidebar-label w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center justify-center transition">
+                    <i class="fa-solid fa-angles-left text-xs"></i>
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Main Navigation">
+                <button onclick="App.navigate('dashboard')" data-nav="dashboard" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition group">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-chart-pie w-5 text-center text-base"></i>
+                        <span class="sidebar-label">Overview</span>
+                    </div>
+                </button>
+
+                <button onclick="App.navigate('notes')" data-nav="notes" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition group">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-book-open-reader w-5 text-center text-base"></i>
+                        <span class="sidebar-label">Knowledge Vault</span>
+                    </div>
+                    <span id="nav-badge-notes" class="sidebar-badge text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-slate-400">0</span>
+                </button>
+
+                <button onclick="App.navigate('tasks')" data-nav="tasks" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition group">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-list-check w-5 text-center text-base"></i>
+                        <span class="sidebar-label">Tasks & Goals</span>
+                    </div>
+                    <span id="nav-badge-tasks" class="sidebar-badge text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-slate-400">0</span>
+                </button>
+
+                <button onclick="App.navigate('links')" data-nav="links" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition group">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-compass w-5 text-center text-base"></i>
+                        <span class="sidebar-label">Quick Links Hub</span>
+                    </div>
+                </button>
+
+                <button onclick="App.navigate('ai')" data-nav="ai" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition group">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-wand-magic-sparkles w-5 text-center text-base"></i>
+                        <span class="sidebar-label">AI Command Hub</span>
+                    </div>
+                    <span class="sidebar-badge text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-accent-soft text-accent">Pro</span>
+                </button>
+
+                <div class="pt-3 mt-3 border-t border-slate-200/70 dark:border-slate-800/70">
+                    <button onclick="App.navigate('settings')" data-nav="settings" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition group">
+                        <div class="flex items-center space-x-3">
+                            <i class="fa-solid fa-sliders w-5 text-center text-base"></i>
+                            <span class="sidebar-label">Settings & Backup</span>
+                        </div>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Sidebar Footer / Productivity Pulse -->
+            <div class="p-3 border-t border-slate-200/70 dark:border-slate-800/70">
+                <div class="sidebar-footer-details bg-slate-100/80 dark:bg-dark-850 rounded-xl p-3 border border-slate-200/60 dark:border-slate-800/80">
+                    <div class="flex items-center justify-between text-xs mb-1.5">
+                        <span class="font-medium text-slate-600 dark:text-slate-300">Productivity Score</span>
+                        <span id="sidebar-score-text" class="font-mono font-bold text-accent">0%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-200 dark:bg-dark-700 rounded-full overflow-hidden">
+                        <div id="sidebar-score-bar" class="h-full bg-accent rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div class="mt-2.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                        <span><i class="fa-solid fa-database mr-1 text-emerald-400"></i>Local Vault Active</span>
+                        <button onclick="App.exportData()" class="hover:underline text-accent font-medium">Backup</button>
+                    </div>
+                </div>
+                <button onclick="App.toggleSidebarCollapse()" class="hidden lg:flex w-full mt-1 items-center justify-center py-1.5 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" title="Expand/Collapse">
+                    <i class="fa-solid fa-arrows-left-right"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN WORKSPACE COLUMN -->
+        <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-slate-50 dark:bg-dark-950">
+
+            <!-- TOP HEADER BAR -->
+            <header class="h-16 bg-white/85 dark:bg-dark-900/85 glass-panel border-b border-slate-200/80 dark:border-slate-800/80 px-4 lg:px-8 flex items-center justify-between shrink-0 z-20">
+                <!-- Left: Mobile Brand & Current Section Title -->
+                <div class="flex items-center space-x-3 min-w-0">
+                    <div class="lg:hidden w-8 h-8 rounded-xl bg-accent flex items-center justify-center text-white font-bold shadow">
+                        <i class="fa-solid fa-bolt-lightning text-xs"></i>
+                    </div>
+                    <div class="truncate">
+                        <div class="flex items-center space-x-2">
+                            <h2 id="header-module-title" class="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">Dashboard Overview</h2>
+                            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>Online
+                            </span>
+                        </div>
+                        <p id="header-date-display" class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">Loading date...</p>
+                    </div>
+                </div>
+
+                <!-- Right: Live Clock, Quick Add Buttons, Theme Switcher -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <!-- Live Digital Clock -->
+                    <div class="hidden md:flex items-center space-x-2 bg-slate-100 dark:bg-dark-850 border border-slate-200/70 dark:border-slate-800 px-3 py-1.5 rounded-xl font-mono text-xs text-slate-700 dark:text-slate-300">
+                        <i class="fa-regular fa-clock text-accent"></i>
+                        <span id="live-clock">00:00:00</span>
+                    </div>
+
+                    <!-- Quick Action: New Note -->
+                    <button onclick="App.openNoteModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-700 text-slate-700 dark:text-slate-200 text-xs font-medium transition flex items-center space-x-1.5 border border-slate-200/60 dark:border-slate-700/60" title="Create Note">
+                        <i class="fa-solid fa-plus text-accent"></i>
+                        <span class="hidden sm:inline">Note</span>
+                    </button>
+
+                    <!-- Quick Action: New Task -->
+                    <button onclick="App.openTaskModal()" class="px-3 py-1.5 rounded-xl bg-accent text-white text-xs font-medium transition flex items-center space-x-1.5 shadow-sm" title="Create Task">
+                        <i class="fa-solid fa-check-double"></i>
+                        <span class="hidden sm:inline">Add Task</span>
+                    </button>
+
+                    <!-- Theme Mode Toggle -->
+                    <button onclick="App.toggleTheme()" id="theme-toggle-btn" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition border border-slate-200/60 dark:border-slate-800" title="Switch Dark/Light Mode" aria-label="Toggle theme">
+                        <i id="theme-toggle-icon" class="fa-solid fa-sun text-sm text-amber-400"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- SCROLLABLE MAIN CONTENT CONTAINER -->
+            <main id="main-scroll-area" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 lg:pb-10 space-y-6">
+
+                <!-- ==============================================================
+                     MODULE A: DASHBOARD / OVERVIEW
+                     ============================================================== -->
+                <section id="view-dashboard" class="module-view space-y-6 max-w-7xl mx-auto">
+                    
+                    <!-- Hero Welcome Banner & Quote Card -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div class="lg:col-span-2 relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-dark-900 to-slate-950 text-white p-6 border border-slate-800 shadow-lg flex flex-col justify-between">
+                            <div class="absolute -right-10 -top-10 w-44 h-44 rounded-full bg-accent opacity-20 blur-3xl pointer-events-none"></div>
+                            <div class="relative z-10">
+                                <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-white/10 text-xs font-medium text-slate-200 mb-3">
+                                    <i class="fa-solid fa-sparkles text-amber-400"></i>
+                                    <span id="dashboard-greeting-tag">Future-Proof Command Center</span>
+                                </div>
+                                <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight" id="dashboard-welcome-heading">Welcome back, Saidul! 🚀</h2>
+                                <p class="text-slate-300 text-sm mt-1.5 max-w-xl leading-relaxed">
+                                    Focus on high-leverage learning, AI orchestration, and daily compounding. Every note and task completed today builds your 2030 advantage.
+                                </p>
+                            </div>
+                            <div class="relative z-10 mt-5 pt-4 border-t border-white/10 flex flex-wrap items-center gap-3">
+                                <button onclick="App.navigate('notes')" class="px-3.5 py-2 rounded-xl bg-accent text-white text-xs font-semibold transition flex items-center space-x-2 shadow">
+                                    <i class="fa-solid fa-book-open"></i><span>Open Study Vault</span>
+                                </button>
+                                <button onclick="App.navigate('ai')" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition flex items-center space-x-2">
+                                    <i class="fa-solid fa-robot text-accent"></i><span>Launch AI Hub</span>
+                                </button>
+                                <button onclick="App.openGoalModal()" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition flex items-center space-x-2">
+                                    <i class="fa-solid fa-bullseye text-emerald-400"></i><span>Set New Goal</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Daily Mindset / Compounding Quote -->
+                        <div class="rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 p-5 flex flex-col justify-between shadow-sm">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-xs font-semibold uppercase tracking-wider text-accent flex items-center gap-1.5">
+                                        <i class="fa-solid fa-lightbulb"></i> Daily Mindset
+                                    </span>
+                                    <button onclick="App.nextQuote()" class="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition" title="Refresh Quote">
+                                        <i class="fa-solid fa-rotate text-xs"></i>
+                                    </button>
+                                </div>
+                                <blockquote id="quote-text" class="text-sm sm:text-base font-medium text-slate-800 dark:text-slate-100 italic leading-relaxed">
+                                    "Compound interest is the eighth wonder of the world. Knowledge and skills compound even faster."
+                                </blockquote>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/70 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                                <span id="quote-author" class="font-semibold text-slate-700 dark:text-slate-300">— Naval & Warren Mindset</span>
+                                <span class="font-mono text-[11px]">2030 Vision</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Real-Time KPI Metrics Grid (Calculated from Actual Data) -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Metric 1: Study Notes -->
+                        <div onclick="App.navigate('notes')" class="cursor-pointer rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-5 card-hover shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Knowledge Vault</span>
+                                <div class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                                    <i class="fa-solid fa-book-bookmark"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-baseline space-x-2">
+                                <span id="stat-total-notes" class="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white">0</span>
+                                <span class="text-xs text-slate-500 dark:text-slate-400">notes</span>
+                            </div>
+                            <p id="stat-pinned-notes" class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 truncate">0 pinned for quick revision</p>
+                        </div>
+
+                        <!-- Metric 2: Tasks Status -->
+                        <div onclick="App.navigate('tasks')" class="cursor-pointer rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-5 card-hover shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Pending Tasks</span>
+                                <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                                    <i class="fa-solid fa-list-check"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-baseline space-x-2">
+                                <span id="stat-pending-tasks" class="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white">0</span>
+                                <span id="stat-completed-tasks" class="text-xs text-emerald-500 font-medium">0 completed</span>
+                            </div>
+                            <p id="stat-high-priority" class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 truncate">0 high priority items</p>
+                        </div>
+
+                        <!-- Metric 3: Goals Progress -->
+                        <div onclick="App.navigate('tasks')" class="cursor-pointer rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-5 card-hover shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Goal Completion</span>
+                                <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                                    <i class="fa-solid fa-bullseye"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-baseline space-x-2">
+                                <span id="stat-goal-avg" class="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white">0%</span>
+                                <span id="stat-goal-count" class="text-xs text-slate-500 dark:text-slate-400">0 active goals</span>
+                            </div>
+                            <div class="mt-2 w-full h-1.5 bg-slate-100 dark:bg-dark-800 rounded-full overflow-hidden">
+                                <div id="stat-goal-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Metric 4: Overall Productivity Index -->
+                        <div class="rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-5 card-hover shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Workspace Score</span>
+                                <div class="w-9 h-9 rounded-xl bg-accent-soft text-accent flex items-center justify-center">
+                                    <i class="fa-solid fa-fire-flame-curved"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-baseline space-x-2">
+                                <span id="stat-productivity-score" class="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white">0%</span>
+                                <span id="stat-productivity-label" class="text-xs font-medium text-accent">Building Momentum</span>
+                            </div>
+                            <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 truncate">Calculated from real activity</p>
+                        </div>
+                    </div>
+
+                    <!-- Middle Row: Priority Tasks & Deadlines + Active Goals Snapshot -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        
+                        <!-- Priority & Upcoming Tasks (7 Cols) -->
+                        <div class="lg:col-span-7 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 p-5 flex flex-col justify-between shadow-sm">
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                                            <i class="fa-solid fa-bolt text-amber-400"></i>
+                                            <span>Priority Focus & Deadlines</span>
+                                        </h3>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Check off tasks directly or manage deadlines</p>
+                                    </div>
+                                    <button onclick="App.openTaskModal()" class="text-xs font-semibold text-accent hover:underline flex items-center gap-1">
+                                        <i class="fa-solid fa-plus"></i> Add Task
+                                    </button>
+                                </div>
+                                <div id="dashboard-tasks-list" class="space-y-2.5">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/70 flex justify-between items-center text-xs">
+                                <span class="text-slate-500 dark:text-slate-400" id="dashboard-tasks-footer">Showing top pending tasks</span>
+                                <button onclick="App.navigate('tasks')" class="font-semibold text-accent hover:underline">View All Tasks &rarr;</button>
+                            </div>
+                        </div>
+
+                        <!-- Active Goals & Milestones (5 Cols) -->
+                        <div class="lg:col-span-5 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 p-5 flex flex-col justify-between shadow-sm">
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                                            <i class="fa-solid fa-flag-checkered text-emerald-400"></i>
+                                            <span>Active Goals Tracker</span>
+                                        </h3>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Long-term & daily targets</p>
+                                    </div>
+                                    <button onclick="App.openGoalModal()" class="text-xs font-semibold text-accent hover:underline flex items-center gap-1">
+                                        <i class="fa-solid fa-plus"></i> New Goal
+                                    </button>
+                                </div>
+                                <div id="dashboard-goals-list" class="space-y-3.5">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/70 flex justify-between items-center text-xs">
+                                <span class="text-slate-500 dark:text-slate-400">Click +10% to log progress</span>
+                                <button onclick="App.navigate('tasks')" class="font-semibold text-accent hover:underline">Manage Goals &rarr;</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Row: Recent Study Notes & Quick Launch Shortcuts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Recent Notes (7 Cols) -->
+                        <div class="lg:col-span-7 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                                        <i class="fa-solid fa-layer-group text-indigo-400"></i>
+                                        <span>Recent Study Notes</span>
+                                    </h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Click any note to open clean reading view</p>
+                                </div>
+                                <button onclick="App.navigate('notes')" class="text-xs font-semibold text-accent hover:underline">Open Vault &rarr;</button>
+                            </div>
+                            <div id="dashboard-recent-notes" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Quick Launch & Recent Activity Feed (5 Cols) -->
+                        <div class="lg:col-span-5 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-sm flex flex-col justify-between space-y-5">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                                        <i class="fa-solid fa-rocket text-rose-400"></i>
+                                        <span>Instant Launchpad</span>
+                                    </h3>
+                                    <button onclick="App.navigate('links')" class="text-xs font-semibold text-accent hover:underline">Customize</button>
+                                </div>
+                                <div id="dashboard-quick-links" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2.5">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+
+                            <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                                <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">Recent Workspace Activity</h4>
+                                <div id="dashboard-activity-feed" class="space-y-2 max-h-36 overflow-y-auto pr-1">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==============================================================
+                     MODULE B: STUDY NOTES & KNOWLEDGE VAULT
+                     ============================================================== -->
+                <section id="view-notes" class="module-view hidden space-y-6 max-w-7xl mx-auto">
+                    <!-- Vault Header & Controls -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-dark-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Study Notes & Knowledge Vault</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Organize Class X chapters, formulas, code snippets, and business ideas</p>
+                        </div>
+                        <button onclick="App.openNoteModal()" class="px-4 py-2.5 rounded-xl bg-accent text-white text-xs sm:text-sm font-semibold shadow flex items-center justify-center space-x-2 transition shrink-0">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Create Study Note</span>
+                        </button>
+                    </div>
+
+                    <!-- Search & Subject Filter Bar -->
+                    <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                        <!-- Instant Search Input -->
+                        <div class="relative flex-1 max-w-md">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="notes-search-input" oninput="App.renderNotes()" placeholder="Search notes by title, content, or subject..." class="w-full pl-10 pr-9 py-2.5 rounded-xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800 text-sm text-slate-800 dark:text-slate-100 ring-accent transition">
+                            <button onclick="document.getElementById('notes-search-input').value=''; App.renderNotes();" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs" title="Clear Search">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <!-- Subject Filter Pills -->
+                        <div id="notes-subject-filters" class="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Notes Grid -->
+                    <div id="notes-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- ==============================================================
+                     MODULE C: ADVANCED TASK & GOAL MANAGER
+                     ============================================================== -->
+                <section id="view-tasks" class="module-view hidden space-y-6 max-w-7xl mx-auto">
+                    <!-- Top Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-dark-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Task & Goal Execution Engine</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Prioritize daily study assignments and track long-term compounding milestones</p>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <button onclick="App.openTaskModal()" class="px-4 py-2.5 rounded-xl bg-accent text-white text-xs sm:text-sm font-semibold shadow flex items-center space-x-2 transition">
+                                <i class="fa-solid fa-plus"></i><span>New Task</span>
+                            </button>
+                            <button onclick="App.openGoalModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-700 text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-semibold border border-slate-200/70 dark:border-slate-700 flex items-center space-x-2 transition">
+                                <i class="fa-solid fa-bullseye text-emerald-400"></i><span>New Goal</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Left 7 Cols: Tasks Management -->
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div id="task-filter-pills" class="flex items-center gap-1.5 overflow-x-auto pb-1">
+                                    <button onclick="App.setTaskFilter('all')" data-task-filter="all" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition">All</button>
+                                    <button onclick="App.setTaskFilter('pending')" data-task-filter="pending" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition">Pending</button>
+                                    <button onclick="App.setTaskFilter('completed')" data-task-filter="completed" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition">Completed</button>
+                                    <button onclick="App.setTaskFilter('high')" data-task-filter="high" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition">High Priority</button>
+                                </div>
+                                <span id="tasks-count-summary" class="text-xs font-mono text-slate-500 dark:text-slate-400">0 tasks</span>
+                            </div>
+
+                            <div id="tasks-list-container" class="space-y-2.5">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Right 5 Cols: Goals & Milestones -->
+                        <div class="lg:col-span-5 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                    <i class="fa-solid fa-trophy text-amber-400"></i> Long-Term & Daily Goals
+                                </h3>
+                                <span id="goals-avg-badge" class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">0% Avg</span>
+                            </div>
+
+                            <div id="goals-list-container" class="space-y-3">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==============================================================
+                     MODULE D: QUICK LINKS & PRODUCTIVITY HUB
+                     ============================================================== -->
+                <section id="view-links" class="module-view hidden space-y-6 max-w-7xl mx-auto">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-dark-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Quick Links & Resource Directory</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">One-click access to your essential study portals, cloud drives, and developer platforms</p>
+                        </div>
+                        <button onclick="App.openLinkModal()" class="px-4 py-2.5 rounded-xl bg-accent text-white text-xs sm:text-sm font-semibold shadow flex items-center justify-center space-x-2 transition shrink-0">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Add Custom Link</span>
+                        </button>
+                    </div>
+
+                    <!-- Category Filter Pills -->
+                    <div id="links-category-filters" class="flex items-center gap-2 overflow-x-auto pb-1">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Links Grid -->
+                    <div id="links-grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- ==============================================================
+                     MODULE E: AI INTEGRATION & ORCHESTRATION HUB
+                     ============================================================== -->
+                <section id="view-ai" class="module-view hidden space-y-6 max-w-7xl mx-auto">
+                    <!-- Banner -->
+                    <div class="rounded-2xl bg-gradient-to-r from-indigo-950 via-slate-900 to-dark-900 border border-indigo-500/30 p-6 text-white shadow-lg">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="space-y-1.5">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                                    <i class="fa-solid fa-microchip"></i> 2030 AI Orchestration Hub
+                                </span>
+                                <h2 class="text-2xl font-extrabold tracking-tight">Direct Your AI Employees</h2>
+                                <p class="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+                                    Launch world-class AI models in one click or copy battle-tested Role + Context + Goal prompts below to accelerate your Class X studies, coding, and business research.
+                                </p>
+                            </div>
+                            <button onclick="App.openPromptModal()" class="px-4 py-2.5 rounded-xl bg-accent text-white text-xs sm:text-sm font-semibold shadow flex items-center space-x-2 shrink-0 self-start md:self-center">
+                                <i class="fa-solid fa-plus"></i><span>Save Custom Prompt</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- AI Platforms Grid -->
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-satellite-dish text-accent"></i> AI Platforms Launcher
+                        </h3>
+                        <div id="ai-platforms-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Prompt Engineering Vault -->
+                    <div class="pt-2">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                <i class="fa-solid fa-terminal text-emerald-400"></i> High-Leverage Prompt Templates (Click to Copy)
+                            </h3>
+                        </div>
+                        <div id="ai-prompts-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==============================================================
+                     MODULE F: PERSONALIZATION & SETTINGS
+                     ============================================================== -->
+                <section id="view-settings" class="module-view hidden space-y-6 max-w-4xl mx-auto">
+                    <div class="bg-white dark:bg-dark-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Workspace Personalization & Settings</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Customize your identity, visual theme, data backups, and storage preferences</p>
+                        </div>
+
+                        <!-- Profile Settings -->
+                        <div class="pt-4 border-t border-slate-200/70 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Workspace Owner Name</label>
+                                <input type="text" id="settings-user-name" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Title / Ambition Tag</label>
+                                <input type="text" id="settings-user-role" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+                            </div>
+                            <div class="sm:col-span-2 flex justify-end">
+                                <button onclick="App.saveProfileSettings()" class="px-4 py-2 rounded-xl bg-accent text-white text-xs font-semibold shadow transition">
+                                    Save Identity Changes
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Visual Theme & Accent Picker -->
+                        <div class="pt-5 border-t border-slate-200/70 dark:border-slate-800 space-y-4">
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Visual Appearance & Accent Color</h3>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <!-- Color Mode -->
+                                <div class="p-4 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between">
+                                    <div>
+                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">Color Theme Mode</div>
+                                        <div class="text-xs text-slate-500 dark:text-slate-400">Switch between Midnight Dark and Crisp Light</div>
+                                    </div>
+                                    <button onclick="App.toggleTheme()" class="px-3.5 py-2 rounded-xl bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold shadow-sm">
+                                        Toggle Theme
+                                    </button>
+                                </div>
+
+                                <!-- Sidebar Collapse Default -->
+                                <div class="p-4 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between">
+                                    <div>
+                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">Compact Desktop Sidebar</div>
+                                        <div class="text-xs text-slate-500 dark:text-slate-400">Maximize screen width on laptops</div>
+                                    </div>
+                                    <button onclick="App.toggleSidebarCollapse()" class="px-3.5 py-2 rounded-xl bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold shadow-sm">
+                                        Toggle Sidebar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Accent Swatches -->
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2.5">Select Signature Accent Color</label>
+                                <div class="flex flex-wrap gap-3">
+                                    <button onclick="App.setAccent('indigo')" class="flex items-center space-x-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-dark-850 hover:border-indigo-500 transition text-xs font-semibold">
+                                        <span class="w-4 h-4 rounded-full bg-indigo-500"></span><span>Indigo (Linear)</span>
+                                    </button>
+                                    <button onclick="App.setAccent('emerald')" class="flex items-center space-x-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-dark-850 hover:border-emerald-500 transition text-xs font-semibold">
+                                        <span class="w-4 h-4 rounded-full bg-emerald-500"></span><span>Emerald (Growth)</span>
+                                    </button>
+                                    <button onclick="App.setAccent('rose')" class="flex items-center space-x-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-dark-850 hover:border-rose-500 transition text-xs font-semibold">
+                                        <span class="w-4 h-4 rounded-full bg-rose-500"></span><span>Rose (Energy)</span>
+                                    </button>
+                                    <button onclick="App.setAccent('amber')" class="flex items-center space-x-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-dark-850 hover:border-amber-500 transition text-xs font-semibold">
+                                        <span class="w-4 h-4 rounded-full bg-amber-500"></span><span>Amber (Gold)</span>
+                                    </button>
+                                    <button onclick="App.setAccent('cyan')" class="flex items-center space-x-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-dark-850 hover:border-cyan-500 transition text-xs font-semibold">
+                                        <span class="w-4 h-4 rounded-full bg-cyan-500"></span><span>Cyan (Cyber)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Backup, Restore & Reset -->
+                        <div class="pt-5 border-t border-slate-200/70 dark:border-slate-800 space-y-4">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Data Portability & Storage Management</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Export your entire workspace as a JSON file to transfer between your Lenovo laptop and Android phone.</p>
+                            </div>
+
+                            <div class="flex flex-wrap gap-3">
+                                <button onclick="App.exportData()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center space-x-2 shadow-sm transition">
+                                    <i class="fa-solid fa-file-arrow-down"></i><span>Export Backup (.JSON)</span>
+                                </button>
+
+                                <label class="cursor-pointer px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-700 text-slate-800 dark:text-slate-200 text-xs font-semibold flex items-center space-x-2 border border-slate-200 dark:border-slate-700 transition">
+                                    <i class="fa-solid fa-file-arrow-up text-accent"></i><span>Import Backup (.JSON)</span>
+                                    <input type="file" id="import-json-input" accept=".json" onchange="App.importData(event)" class="hidden">
+                                </label>
+
+                                <button onclick="App.confirmResetDemoData()" class="px-4 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 text-xs font-semibold flex items-center space-x-2 transition">
+                                    <i class="fa-solid fa-rotate-left"></i><span>Restore Sample Study Data</span>
+                                </button>
+
+                                <button onclick="App.confirmClearAllData()" class="px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-xs font-semibold flex items-center space-x-2 transition">
+                                    <i class="fa-solid fa-trash-can"></i><span>Clear All Workspace Data</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- System & Cloud Readiness Spec -->
+                        <div class="pt-5 border-t border-slate-200/70 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 font-mono">
+                            <div>Saidul's Dashboard v2.5.0 • Single-File Production Build</div>
+                            <div>Storage Engine: LocalStorage + CloudAdapter Ready (Firebase/Supabase)</div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+
+            <!-- MOBILE TOUCH NAVIGATION BAR (Android & Small Screens) -->
+            <nav class="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 dark:bg-dark-900/95 glass-panel border-t border-slate-200/80 dark:border-slate-800/80 grid grid-cols-6 items-center z-30 px-1 select-none">
+                <button onclick="App.navigate('dashboard')" data-mobile-nav="dashboard" class="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400">
+                    <i class="fa-solid fa-chart-pie text-base"></i>
+                    <span class="text-[10px] font-medium mt-1">Home</span>
+                </button>
+                <button onclick="App.navigate('notes')" data-mobile-nav="notes" class="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400">
+                    <i class="fa-solid fa-book-open text-base"></i>
+                    <span class="text-[10px] font-medium mt-1">Notes</span>
+                </button>
+                <button onclick="App.navigate('tasks')" data-mobile-nav="tasks" class="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400">
+                    <i class="fa-solid fa-list-check text-base"></i>
+                    <span class="text-[10px] font-medium mt-1">Tasks</span>
+                </button>
+                <button onclick="App.navigate('links')" data-mobile-nav="links" class="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400">
+                    <i class="fa-solid fa-compass text-base"></i>
+                    <span class="text-[10px] font-medium mt-1">Links</span>
+                </button>
+                <button onclick="App.navigate('ai')" data-mobile-nav="ai" class="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400">
+                    <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
+                    <span class="text-[10px] font-medium mt-1">AI Hub</span>
+                </button>
+                <button onclick="App.navigate('settings')" data-mobile-nav="settings" class="flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400">
+                    <i class="fa-solid fa-sliders text-base"></i>
+                    <span class="text-[10px] font-medium mt-1">Settings</span>
+                </button>
+            </nav>
+
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODALS & DIALOGS (NO NATIVE ALERT/CONFIRM USED)
+         ========================================================================== -->
+
+    <!-- 1. CREATE / EDIT NOTE MODAL -->
+    <div id="modal-note" class="fixed inset-0 z-50 hidden bg-slate-950/70 glass-panel flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between">
+                <h3 id="modal-note-title" class="text-lg font-bold text-slate-900 dark:text-white">Create Study Note</h3>
+                <button onclick="App.closeModal('modal-note')" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <input type="hidden" id="note-id-input">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Note Title *</label>
+                    <input type="text" id="note-title-input" placeholder="e.g., Quadratic Equations Formula Sheet" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Subject</label>
+                    <select id="note-subject-input" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Science">Science</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="English">English</option>
+                        <option value="History">History</option>
+                        <option value="General">General / Strategy</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex-1 flex flex-col min-h-[200px]">
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Note Content / Key Points *</label>
+                <textarea id="note-content-input" rows="8" placeholder="Write your structured study notes, key formulas, or AI insights here..." class="w-full flex-1 p-3.5 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm font-sans leading-relaxed ring-accent resize-y"></textarea>
+            </div>
+            <div class="flex items-center justify-between pt-2">
+                <label class="inline-flex items-center space-x-2 cursor-pointer text-xs font-medium text-slate-600 dark:text-slate-300">
+                    <input type="checkbox" id="note-pin-input" class="rounded text-indigo-600 focus:ring-0">
+                    <span><i class="fa-solid fa-thumbtack text-amber-400 mr-1"></i>Pin note to top of Vault</span>
+                </label>
+                <div class="flex items-center space-x-2">
+                    <button onclick="App.closeModal('modal-note')" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-slate-300 text-xs font-semibold">Cancel</button>
+                    <button onclick="App.saveNote()" class="px-5 py-2 rounded-xl bg-accent text-white text-xs font-semibold shadow">Save Note</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. NOTE READER MODAL -->
+    <div id="modal-note-reader" class="fixed inset-0 z-50 hidden bg-slate-950/75 glass-panel flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[88vh] flex flex-col">
+            <div class="flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div>
+                    <span id="reader-note-subject" class="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-accent-soft text-accent">Subject</span>
+                    <h3 id="reader-note-title" class="text-xl font-bold text-slate-900 dark:text-white mt-2">Note Title</h3>
+                    <p id="reader-note-meta" class="text-xs text-slate-400 font-mono mt-1">Updated just now</p>
+                </div>
+                <button onclick="App.closeModal('modal-note-reader')" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="reader-note-body" class="flex-1 overflow-y-auto text-sm sm:text-base text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed pr-2 font-sans"></div>
+            <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button id="reader-copy-btn" class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-700 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center space-x-1.5">
+                    <i class="fa-regular fa-copy"></i><span>Copy Text</span>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <button id="reader-edit-btn" class="px-4 py-2 rounded-xl bg-accent text-white text-xs font-semibold flex items-center space-x-1.5">
+                        <i class="fa-solid fa-pen"></i><span>Edit Note</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. CREATE / EDIT TASK MODAL -->
+    <div id="modal-task" class="fixed inset-0 z-50 hidden bg-slate-950/70 glass-panel flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 id="modal-task-heading" class="text-lg font-bold text-slate-900 dark:text-white">Add New Task</h3>
+                <button onclick="App.closeModal('modal-task')" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <input type="hidden" id="task-id-input">
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Task Description *</label>
+                <input type="text" id="task-title-input" placeholder="e.g., Solve 15 Trigonometry problems from NCERT" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Priority</label>
+                    <select id="task-priority-input" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+                        <option value="high">High Priority</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Subject / Tag</label>
+                    <select id="task-category-input" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Science">Science</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="English">English</option>
+                        <option value="History">History</option>
+                        <option value="AI & Coding">AI & Coding</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Deadline Date</label>
+                    <input type="date" id="task-due-input" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-3">
+                <button onclick="App.closeModal('modal-task')" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-slate-300 text-xs font-semibold">Cancel</button>
+                <button onclick="App.saveTask()" class="px-5 py-2 rounded-xl bg-accent text-white text-xs font-semibold shadow">Save Task</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. CREATE / EDIT GOAL MODAL -->
+    <div id="modal-goal" class="fixed inset-0 z-50 hidden bg-slate-950/70 glass-panel flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 id="modal-goal-heading" class="text-lg font-bold text-slate-900 dark:text-white">Create Milestone Goal</h3>
+                <button onclick="App.closeModal('modal-goal')" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <input type="hidden" id="goal-id-input">
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Goal Title *</label>
+                <input type="text" id="goal-title-input" placeholder="e.g., Score 95%+ in Class X Board Exams" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Goal Horizon</label>
+                    <select id="goal-type-input" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+                        <option value="Long-Term">Long-Term Target</option>
+                        <option value="Daily Habit">Daily / Weekly Habit</option>
+                        <option value="Skill Mastery">AI & Skill Mastery</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Initial Progress (<span id="goal-modal-pct-label">20%</span>)</label>
+                    <input type="range" id="goal-progress-input" min="0" max="100" step="5" value="20" oninput="document.getElementById('goal-modal-pct-label').textContent = this.value + '%'" class="w-full mt-2 accent-slider">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-3">
+                <button onclick="App.closeModal('modal-goal')" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-slate-300 text-xs font-semibold">Cancel</button>
+                <button onclick="App.saveGoal()" class="px-5 py-2 rounded-xl bg-accent text-white text-xs font-semibold shadow">Save Goal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. ADD / EDIT QUICK LINK MODAL -->
+    <div id="modal-link" class="fixed inset-0 z-50 hidden bg-slate-950/70 glass-panel flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 id="modal-link-heading" class="text-lg font-bold text-slate-900 dark:text-white">Add Quick Link</h3>
+                <button onclick="App.closeModal('modal-link')" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <input type="hidden" id="link-id-input">
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Platform / Site Name *</label>
+                <input type="text" id="link-title-input" placeholder="e.g., Khan Academy" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">URL (https://...) *</label>
+                <input type="url" id="link-url-input" placeholder="https://www.khanacademy.org" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Category</label>
+                    <select id="link-category-input" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+                        <option value="Study">Study & Education</option>
+                        <option value="Workspace">Google & Cloud</option>
+                        <option value="Coding">Coding & Dev</option>
+                        <option value="AI">AI Tools</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Short Description</label>
+                    <input type="text" id="link-desc-input" placeholder="Free lessons" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="App.closeModal('modal-link')" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-slate-300 text-xs font-semibold">Cancel</button>
+                <button onclick="App.saveLink()" class="px-5 py-2 rounded-xl bg-accent text-white text-xs font-semibold shadow">Save Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. SAVE CUSTOM AI PROMPT MODAL -->
+    <div id="modal-prompt" class="fixed inset-0 z-50 hidden bg-slate-950/70 glass-panel flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Save Custom AI Prompt</h3>
+                <button onclick="App.closeModal('modal-prompt')" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Prompt Title *</label>
+                <input type="text" id="prompt-title-input" placeholder="e.g., Socratic Math Problem Solver" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Role / Category Tag</label>
+                <input type="text" id="prompt-tag-input" placeholder="e.g., Exam Prep / Coding / Business" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Full Prompt Template (Role + Context + Goal) *</label>
+                <textarea id="prompt-body-input" rows="5" placeholder="Act as an expert..." class="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-800 text-sm ring-accent"></textarea>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="App.closeModal('modal-prompt')" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-slate-300 text-xs font-semibold">Cancel</button>
+                <button onclick="App.saveCustomPrompt()" class="px-5 py-2 rounded-xl bg-accent text-white text-xs font-semibold shadow">Save Prompt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. UNIVERSAL CONFIRMATION MODAL -->
+    <div id="modal-confirm" class="fixed inset-0 z-50 hidden bg-slate-950/75 glass-panel flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center">
+            <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h3 id="confirm-modal-title" class="text-base font-bold text-slate-900 dark:text-white">Confirm Action</h3>
+                <p id="confirm-modal-message" class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Are you sure you want to proceed?</p>
+            </div>
+            <div class="flex items-center justify-center space-x-3 pt-2">
+                <button onclick="App.closeModal('modal-confirm')" class="flex-1 py-2 rounded-xl bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-slate-300 text-xs font-semibold">Cancel</button>
+                <button id="confirm-modal-action-btn" class="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NON-INTRUSIVE TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-20 lg:bottom-6 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- ==========================================================================
+         MODULAR APPLICATION ARCHITECTURE (ES6+ VANILLA JS)
+         ========================================================================== -->
+    <script>
+        /**
+         * ========================================================================
+         * 1. UTILITY & SECURITY HELPERS (XSS Prevention, IDs, Formatting)
+         * ========================================================================
+         */
+        const Utils = {
+            uid(prefix = 'id') {
+                return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
+            },
+
+            escapeHTML(str) {
+                if (str === null || str === undefined) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            },
+
+            formatDate(dateStr) {
+                if (!dateStr) return 'No deadline';
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return dateStr;
+                return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+            },
+
+            timeAgo(isoString) {
+                if (!isoString) return 'recently';
+                const seconds = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+                if (seconds < 60) return 'Just now';
+                const minutes = Math.floor(seconds / 60);
+                if (minutes < 60) return `${minutes}m ago`;
+                const hours = Math.floor(minutes / 60);
+                if (hours < 24) return `${hours}h ago`;
+                const days = Math.floor(hours / 24);
+                return `${days}d ago`;
+            },
+
+            copyToClipboard(text, successMsg = 'Copied to clipboard!') {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    App.notify(successMsg, 'success');
+                } catch (err) {
+                    App.notify('Copy failed. Please copy manually.', 'error');
+                }
+                document.body.removeChild(textarea);
+            }
+        };
+
+        /**
+         * ========================================================================
+         * 2. SEED DATA FACTORY (Default Data for Saidul's Class X & 2030 Journey)
+         * ========================================================================
+         */
+        const SeedFactory = {
+            getDefaultState() {
+                const today = new Date().toISOString().split('T')[0];
+                const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+                const nextWeek = new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0];
+
+                return {
+                    version: '2.5.0',
+                    preferences: {
+                        userName: 'Saidul',
+                        userRole: 'Class X • Future Architect',
+                        theme: 'dark',
+                        accent: 'indigo',
+                        sidebarCollapsed: false
+                    },
+                    notes: [
+                        {
+                            id: 'note_seed_1',
+                            title: 'AI Prompt Engineering Formula (Role + Context + Goal)',
+                            subject: 'Computer Science',
+                            content: 'To orchestrate AI like an employee instead of a basic search engine, always structure prompts in 3 parts:\n\n1. ROLE: Tell the AI who to act as (e.g., "Act as a Principal Software Architect & Mentor").\n2. CONTEXT: Provide background details (e.g., "I am a 15-year-old Class X student building a scalable web workspace").\n3. GOAL: Specify the exact deliverable and format required.\n\nKey Principle: In 2030, coding syntax will be automated—problem definition and AI orchestration will create the highest wealth.',
+                            pinned: true,
+                            createdAt: new Date(Date.now() - 7200000).toISOString(),
+                            updatedAt: new Date(Date.now() - 3600000).toISOString()
+                        },
+                        {
+                            id: 'note_seed_2',
+                            title: 'Control & Coordination — Rapid Revision Sheet',
+                            subject: 'Science',
+                            content: '• Neuron Structure: Dendrite receives nerve impulses -> Cell Body (Cyton) -> Axon transmits impulse -> Synapse releases neurotransmitters.\n• Reflex Arc: Receptor -> Sensory Neuron -> Spinal Cord (Relay Neuron) -> Motor Neuron -> Effector Muscle.\n• Plant Hormones:\n  - Auxin: Cell elongation & phototropism\n  - Gibberellin: Stem growth\n  - Cytokinin: Cell division\n  - Abscisic Acid (ABA): Inhibits growth / wilting of leaves.',
+                            pinned: true,
+                            createdAt: new Date(Date.now() - 86400000).toISOString(),
+                            updatedAt: new Date(Date.now() - 43200000).toISOString()
+                        },
+                        {
+                            id: 'note_seed_3',
+                            title: 'Quadratic Equations & Arithmetic Progressions Formulas',
+                            subject: 'Mathematics',
+                            content: '1. Standard Form: ax² + bx + c = 0 (where a ≠ 0)\n2. Quadratic Formula: x = [-b ± √(b² - 4ac)] / 2a\n3. Discriminant (D) = b² - 4ac:\n   • D > 0: Two distinct real roots\n   • D = 0: Two equal real roots\n   • D < 0: No real roots\n\n4. Arithmetic Progression (AP):\n   • nth term: a_n = a + (n - 1)d\n   • Sum of n terms: S_n = (n/2)[2a + (n - 1)d]',
+                            pinned: false,
+                            createdAt: new Date(Date.now() - 172800000).toISOString(),
+                            updatedAt: new Date(Date.now() - 172800000).toISOString()
+                        },
+                        {
+                            id: 'note_seed_4',
+                            title: 'The Mechanics of Compounding (Wealth & Skills)',
+                            subject: 'General',
+                            content: 'Compounding works on both capital and daily habits:\n• 1% improvement every day for 365 days = 37.7x better in 1 year.\n• Focus on 3 un-automatable skills for 2030:\n  1. AI Orchestration & Systems Thinking\n  2. Real-World Problem Solving & Strategy\n  3. High-Trust Human Communication & Persuasion.',
+                            pinned: false,
+                            createdAt: new Date(Date.now() - 240000000).toISOString(),
+                            updatedAt: new Date(Date.now() - 240000000).toISOString()
+                        }
+                    ],
+                    tasks: [
+                        {
+                            id: 'task_seed_1',
+                            title: 'Deploy Personal All-Rounder Workspace on GitHub Pages',
+                            priority: 'high',
+                            category: 'AI & Coding',
+                            dueDate: today,
+                            completed: false,
+                            createdAt: new Date().toISOString()
+                        },
+                        {
+                            id: 'task_seed_2',
+                            title: 'Complete 15 NCERT Quadratic Equations & AP Practice Sums',
+                            priority: 'high',
+                            category: 'Mathematics',
+                            dueDate: today,
+                            completed: false,
+                            createdAt: new Date().toISOString()
+                        },
+                        {
+                            id: 'task_seed_3',
+                            title: 'Revise Science Chapter: Light Reflection & Refraction Ray Diagrams',
+                            priority: 'medium',
+                            category: 'Science',
+                            dueDate: tomorrow,
+                            completed: false,
+                            createdAt: new Date().toISOString()
+                        },
+                        {
+                            id: 'task_seed_4',
+                            title: 'Practice 15 minutes of AI Prompting & Problem Solving',
+                            priority: 'medium',
+                            category: 'AI & Coding',
+                            dueDate: nextWeek,
+                            completed: true,
+                            createdAt: new Date().toISOString()
+                        }
+                    ],
+                    goals: [
+                        {
+                            id: 'goal_seed_1',
+                            title: 'Score 95%+ in Class X Board Examinations',
+                            type: 'Long-Term',
+                            progress: 65,
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: 'goal_seed_2',
+                            title: 'Master AI Orchestration & Build 5 Live Web Projects',
+                            type: 'Skill Mastery',
+                            progress: 40,
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: 'goal_seed_3',
+                            title: 'Daily 20-Min High-Income Communication & Reading Habit',
+                            type: 'Daily Habit',
+                            progress: 80,
+                            updatedAt: new Date().toISOString()
+                        }
+                    ],
+                    links: [
+                        { id: 'lnk_1', title: 'Google Search', url: 'https://www.google.com', category: 'Workspace', desc: 'Fast global research', icon: 'fa-brands fa-google' },
+                        { id: 'lnk_2', title: 'YouTube Learning', url: 'https://www.youtube.com', category: 'Study', desc: 'Video lectures & tutorials', icon: 'fa-brands fa-youtube' },
+                        { id: 'lnk_3', title: 'GitHub', url: 'https://github.com', category: 'Coding', desc: 'Code hosting & GitHub Pages', icon: 'fa-brands fa-github' },
+                        { id: 'lnk_4', title: 'ChatGPT', url: 'https://chatgpt.com', category: 'AI', desc: 'AI assistant & reasoning', icon: 'fa-solid fa-robot' },
+                        { id: 'lnk_5', title: 'Google Gemini', url: 'https://gemini.google.com', category: 'AI', desc: 'Google ecosystem AI mentor', icon: 'fa-solid fa-wand-magic-sparkles' },
+                        { id: 'lnk_6', title: 'Gmail Inbox', url: 'https://mail.google.com', category: 'Workspace', desc: 'Official communications', icon: 'fa-solid fa-envelope' },
+                        { id: 'lnk_7', title: 'Google Drive', url: 'https://drive.google.com', category: 'Workspace', desc: 'Cloud documents & PDFs', icon: 'fa-brands fa-google-drive' },
+                        { id: 'lnk_8', title: 'Google Calendar', url: 'https://calendar.google.com', category: 'Workspace', desc: 'Time blocking & schedule', icon: 'fa-regular fa-calendar-check' }
+                    ],
+                    prompts: [
+                        {
+                            id: 'prm_1',
+                            title: '80/20 Chapter Summarizer & Analogy Builder',
+                            tag: 'Class X Exam Prep',
+                            body: 'Act as an expert Class X tutor. Summarize this chapter topic into 5 high-impact bullet points, highlight the most common board exam questions, and explain the toughest concept using a real-world analogy a 15-year-old will never forget: [INSERT TOPIC]'
+                        },
+                        {
+                            id: 'prm_2',
+                            title: '24/7 Socratic Concept Mentor',
+                            tag: 'Deep Learning',
+                            body: 'Act as a Socratic mentor. Do not just give me the final answer to this problem. Instead, break the logic down step-by-step and ask me guiding questions so my brain learns how to solve it independently: [INSERT QUESTION]'
+                        },
+                        {
+                            id: 'prm_3',
+                            title: 'Senior Full-Stack Architect Code Generator',
+                            tag: 'AI & Coding',
+                            body: 'Act as a Principal Frontend Engineer. Write clean, modular, responsive HTML/Tailwind/JS code for the following feature. Explain the architecture briefly and ensure zero console errors: [INSERT FEATURE IDEA]'
+                        },
+                        {
+                            id: 'prm_4',
+                            title: 'Teen Business & Problem-Solving Strategist',
+                            tag: '2030 Wealth Mindset',
+                            body: 'Act as a startup advisor. Analyze this daily problem faced by students or local businesses and propose 3 zero-cost digital solutions I can build using free web tools and AI: [INSERT PROBLEM]'
+                        }
+                    ],
+                    activities: [
+                        { id: 'act_1', text: 'Initialized Saidul\'s Workspace v2.5', time: new Date().toISOString(), icon: 'fa-rocket' }
+                    ]
+                };
+            }
+        };
+
+        /**
+         * ========================================================================
+         * 3. CENTRALIZED STORAGE SERVICE (Defensive LocalStorage + Cloud Adapter Ready)
+         * ========================================================================
+         */
+        class StorageService {
+            constructor(storageKey = 'saidul_workspace_v2_state') {
+                this.storageKey = storageKey;
+                this.state = this.load();
+            }
+
+            load() {
+                try {
+                    const raw = localStorage.getItem(this.storageKey);
+                    if (!raw) {
+                        const seed = SeedFactory.getDefaultState();
+                        this.save(seed);
+                        return seed;
+                    }
+                    const parsed = JSON.parse(raw);
+                    return this.validateAndHeal(parsed);
+                } catch (err) {
+                    console.warn('Storage recovery triggered:', err);
+                    return SeedFactory.getDefaultState();
+                }
+            }
+
+            validateAndHeal(data) {
+                const defaults = SeedFactory.getDefaultState();
+                if (!data || typeof data !== 'object') return defaults;
+
+                return {
+                    version: data.version || defaults.version,
+                    preferences: { ...defaults.preferences, ...(data.preferences || {}) },
+                    notes: Array.isArray(data.notes) ? data.notes : defaults.notes,
+                    tasks: Array.isArray(data.tasks) ? data.tasks : defaults.tasks,
+                    goals: Array.isArray(data.goals) ? data.goals : defaults.goals,
+                    links: Array.isArray(data.links) ? data.links : defaults.links,
+                    prompts: Array.isArray(data.prompts) ? data.prompts : defaults.prompts,
+                    activities: Array.isArray(data.activities) ? data.activities.slice(0, 20) : defaults.activities
+                };
+            }
+
+            save(newState = this.state) {
+                this.state = newState;
+                try {
+                    localStorage.setItem(this.storageKey, JSON.stringify(this.state));
+                } catch (err) {
+                    console.error('LocalStorage write error:', err);
+                }
+            }
+
+            logActivity(text, icon = 'fa-circle-check') {
+                this.state.activities.unshift({
+                    id: Utils.uid('act'),
+                    text,
+                    time: new Date().toISOString(),
+                    icon
+                });
+                this.state.activities = this.state.activities.slice(0, 15);
+                this.save();
+            }
+        }
+
+        /**
+         * ========================================================================
+         * 4. MAIN APPLICATION CONTROLLER
+         * ========================================================================
+         */
+        const App = {
+            store: null,
+            activeView: 'dashboard',
+            noteSubjectFilter: 'All',
+            taskStatusFilter: 'all',
+            linkCategoryFilter: 'All',
+            quoteIndex: 0,
+
+            quotes: [
+                { text: 'Compound interest is the eighth wonder of the world. Knowledge and skills compound even faster.', author: 'Naval & Warren Mindset' },
+                { text: 'In 2030, AI won\'t replace humans—humans who orchestrate AI like a 100-person team will replace those who don\'t.', author: 'Future Architect Principle' },
+                { text: 'Don\'t just learn syntax. Learn how to identify painful human problems and build simple digital solutions.', author: 'Founder Playbook' },
+                { text: 'Small daily execution beats occasional genius. 20 minutes of focused skill-building every day makes you unstoppable.', author: 'Compounding Rule' },
+                { text: 'Code and media are permissionless leverage. You can build once at age 15 and let it work for you 24/7.', author: 'Naval Ravikant' }
+            ],
+
+            aiPlatforms: [
+                {
+                    name: 'ChatGPT (OpenAI)',
+                    url: 'https://chatgpt.com',
+                    icon: 'fa-solid fa-robot',
+                    color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+                    tag: 'Reasoning & Coding',
+                    desc: 'Your primary 24/7 Socratic tutor, code architect, and brainstorming partner.'
+                },
+                {
+                    name: 'Google Gemini',
+                    url: 'https://gemini.google.com',
+                    icon: 'fa-solid fa-wand-magic-sparkles',
+                    color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
+                    tag: 'Multimodal & Workspace',
+                    desc: 'Deep integration with Google Docs, Drive, and fast multimodal study analysis.'
+                },
+                {
+                    name: 'Claude (Anthropic)',
+                    url: 'https://claude.ai',
+                    icon: 'fa-solid fa-feather-pointed',
+                    color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+                    tag: 'Frontend & Writing',
+                    desc: 'Exceptional at writing clean single-file web apps, essays, and structured notes.'
+                },
+                {
+                    name: 'Perplexity AI',
+                    url: 'https://www.perplexity.ai',
+                    icon: 'fa-solid fa-magnifying-glass-chart',
+                    color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+                    tag: 'Live Web Research',
+                    desc: 'Real-time fact checking and cited research for Science, History, and market trends.'
+                },
+                {
+                    name: 'Microsoft Copilot',
+                    url: 'https://copilot.microsoft.com',
+                    icon: 'fa-brands fa-microsoft',
+                    color: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
+                    tag: 'Windows Assistant',
+                    desc: 'Built-in Windows productivity companion for quick summaries and image generation.'
+                }
+            ],
+
+            init() {
+                this.store = new StorageService();
+                this.applyPreferences();
+                this.startClock();
+                this.bindKeyboardShortcuts();
+                this.navigate('dashboard');
+                this.renderAll();
+            },
+
+            /* --------------------------------------------------------------------
+               PREFERENCES, THEME & NAVIGATION
+               -------------------------------------------------------------------- */
+            applyPreferences() {
+                const prefs = this.store.state.preferences;
+                const htmlEl = document.documentElement;
+
+                if (prefs.theme === 'light') {
+                    htmlEl.classList.remove('dark');
+                    htmlEl.classList.add('light');
+                    document.getElementById('theme-toggle-icon').className = 'fa-solid fa-moon text-sm text-slate-700';
+                } else {
+                    htmlEl.classList.remove('light');
+                    htmlEl.classList.add('dark');
+                    document.getElementById('theme-toggle-icon').className = 'fa-solid fa-sun text-sm text-amber-400';
+                }
+
+                document.body.setAttribute('data-accent', prefs.accent || 'indigo');
+
+                const sidebar = document.getElementById('desktop-sidebar');
+                if (prefs.sidebarCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                }
+
+                // Identity labels
+                const name = prefs.userName || 'Saidul';
+                const role = prefs.userRole || 'Class X • Future Architect';
+                document.getElementById('sidebar-owner-name').textContent = `${name}'s OS`;
+                document.getElementById('sidebar-owner-role').textContent = role;
+                document.getElementById('settings-user-name').value = name;
+                document.getElementById('settings-user-role').value = role;
+            },
+
+            toggleTheme() {
+                const prefs = this.store.state.preferences;
+                prefs.theme = prefs.theme === 'dark' ? 'light' : 'dark';
+                this.store.save();
+                this.applyPreferences();
+                this.notify(`Switched to ${prefs.theme === 'dark' ? 'Midnight Dark' : 'Crisp Light'} mode`, 'info');
+            },
+
+            setAccent(color) {
+                this.store.state.preferences.accent = color;
+                this.store.save();
+                this.applyPreferences();
+                this.renderAll();
+                this.notify(`Accent color updated to ${color.charAt(0).toUpperCase() + color.slice(1)}`, 'success');
+            },
+
+            toggleSidebarCollapse() {
+                const prefs = this.store.state.preferences;
+                prefs.sidebarCollapsed = !prefs.sidebarCollapsed;
+                this.store.save();
+                this.applyPreferences();
+            },
+
+            saveProfileSettings() {
+                const nameInput = document.getElementById('settings-user-name').value.trim();
+                const roleInput = document.getElementById('settings-user-role').value.trim();
+                if (!nameInput) {
+                    this.notify('Please enter a valid display name', 'error');
+                    return;
+                }
+                this.store.state.preferences.userName = nameInput;
+                this.store.state.preferences.userRole = roleInput || 'Class X • Workspace';
+                this.store.logActivity(`Updated workspace profile for ${nameInput}`, 'fa-user-pen');
+                this.applyPreferences();
+                this.renderDashboard();
+                this.notify('Workspace identity saved!', 'success');
+            },
+
+            navigate(viewId) {
+                this.activeView = viewId;
+                const views = ['dashboard', 'notes', 'tasks', 'links', 'ai', 'settings'];
+                const titles = {
+                    dashboard: 'Dashboard Overview',
+                    notes: 'Study Notes & Knowledge Vault',
+                    tasks: 'Tasks & Goal Execution',
+                    links: 'Quick Links & Productivity Hub',
+                    ai: 'AI Integration & Prompt Hub',
+                    settings: 'Personalization & Settings'
+                };
+
+                views.forEach(v => {
+                    const sec = document.getElementById(`view-${v}`);
+                    if (sec) {
+                        if (v === viewId) sec.classList.remove('hidden');
+                        else sec.classList.add('hidden');
+                    }
+                });
+
+                document.getElementById('header-module-title').textContent = titles[viewId] || 'Workspace';
+
+                // Update Desktop Nav Active State
+                document.querySelectorAll('[data-nav]').forEach(btn => {
+                    const isActive = btn.getAttribute('data-nav') === viewId;
+                    if (isActive) {
+                        btn.className = 'sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold bg-accent text-white shadow-sm transition group';
+                    } else {
+                        btn.className = 'sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-800 hover:text-slate-900 dark:hover:text-white transition group';
+                    }
+                });
+
+                // Update Mobile Bottom Nav Active State
+                document.querySelectorAll('[data-mobile-nav]').forEach(btn => {
+                    const isActive = btn.getAttribute('data-mobile-nav') === viewId;
+                    if (isActive) {
+                        btn.className = 'flex flex-col items-center justify-center py-1 text-accent font-semibold';
+                    } else {
+                        btn.className = 'flex flex-col items-center justify-center py-1 text-slate-500 dark:text-slate-400';
+                    }
+                });
+
+                document.getElementById('main-scroll-area').scrollTop = 0;
+            },
+
+            startClock() {
+                const updateClock = () => {
+                    const now = new Date();
+                    document.getElementById('live-clock').textContent = now.toLocaleTimeString('en-IN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    });
+                    document.getElementById('header-date-display').textContent = now.toLocaleDateString('en-IN', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+
+                    // Time-of-day dynamic greeting
+                    const hr = now.getHours();
+                    const greeting = hr < 12 ? 'Good Morning' : hr < 17 ? 'Good Afternoon' : 'Good Evening';
+                    const name = this.store.state.preferences.userName || 'Saidul';
+                    const headingEl = document.getElementById('dashboard-welcome-heading');
+                    if (headingEl) {
+                        headingEl.textContent = `${greeting}, ${name}! 🚀`;
+                    }
+                };
+                updateClock();
+                setInterval(updateClock, 1000);
+            },
+
+            bindKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+                        e.preventDefault();
+                        this.toggleSidebarCollapse();
+                    }
+                    if (e.key === 'Escape') {
+                        ['modal-note', 'modal-note-reader', 'modal-task', 'modal-goal', 'modal-link', 'modal-prompt', 'modal-confirm'].forEach(id => {
+                            this.closeModal(id);
+                        });
+                    }
+                });
+            },
+
+            /* --------------------------------------------------------------------
+               CENTRAL CALCULATION & MASTER RENDER
+               -------------------------------------------------------------------- */
+            calculateStats() {
+                const { notes, tasks, goals } = this.store.state;
+                const totalNotes = notes.length;
+                const pinnedNotes = notes.filter(n => n.pinned).length;
+
+                const totalTasks = tasks.length;
+                const completedTasks = tasks.filter(t => t.completed).length;
+                const pendingTasks = totalTasks - completedTasks;
+                const highPriorityPending = tasks.filter(t => !t.completed && t.priority === 'high').length;
+
+                const goalCount = goals.length;
+                const avgGoalProgress = goalCount > 0
+                    ? Math.round(goals.reduce((sum, g) => sum + (Number(g.progress) || 0), 0) / goalCount)
+                    : 0;
+
+                // Real Productivity Score formula (Task Completion 45% + Goal Avg 35% + Notes Vault Activity 20%)
+                const taskRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 50;
+                const vaultBonus = Math.min(totalNotes * 20, 100);
+                const productivityScore = Math.round((taskRate * 0.45) + (avgGoalProgress * 0.35) + (vaultBonus * 0.20));
+
+                return {
+                    totalNotes,
+                    pinnedNotes,
+                    totalTasks,
+                    completedTasks,
+                    pendingTasks,
+                    highPriorityPending,
+                    goalCount,
+                    avgGoalProgress,
+                    productivityScore
+                };
+            },
+
+            renderAll() {
+                const stats = this.calculateStats();
+
+                // Update Sidebar Badges & Progress
+                document.getElementById('nav-badge-notes').textContent = stats.totalNotes;
+                document.getElementById('nav-badge-tasks').textContent = stats.pendingTasks;
+                document.getElementById('sidebar-score-text').textContent = `${stats.productivityScore}%`;
+                document.getElementById('sidebar-score-bar').style.width = `${stats.productivityScore}%`;
+
+                this.renderDashboard(stats);
+                this.renderNotes();
+                this.renderTasksAndGoals(stats);
+                this.renderLinks();
+                this.renderAIHub();
+            },
+
+            /* --------------------------------------------------------------------
+               MODULE A: DASHBOARD RENDERING
+               -------------------------------------------------------------------- */
+            nextQuote() {
+                this.quoteIndex = (this.quoteIndex + 1) % this.quotes.length;
+                const q = this.quotes[this.quoteIndex];
+                document.getElementById('quote-text').textContent = `"${q.text}"`;
+                document.getElementById('quote-author').textContent = `— ${q.author}`;
+            },
+
+            renderDashboard(stats = this.calculateStats()) {
+                // KPI Cards
+                document.getElementById('stat-total-notes').textContent = stats.totalNotes;
+                document.getElementById('stat-pinned-notes').textContent = `${stats.pinnedNotes} pinned for quick revision`;
+                document.getElementById('stat-pending-tasks').textContent = stats.pendingTasks;
+                document.getElementById('stat-completed-tasks').textContent = `${stats.completedTasks} done`;
+                document.getElementById('stat-high-priority').textContent = `${stats.highPriorityPending} high-priority pending`;
+                document.getElementById('stat-goal-avg').textContent = `${stats.avgGoalProgress}%`;
+                document.getElementById('stat-goal-count').textContent = `${stats.goalCount} active`;
+                document.getElementById('stat-goal-bar').style.width = `${stats.avgGoalProgress}%`;
+                document.getElementById('stat-productivity-score').textContent = `${stats.productivityScore}%`;
+
+                const scoreLabel = stats.productivityScore >= 80 ? 'Peak Flow' : stats.productivityScore >= 55 ? 'Strong Momentum' : 'Getting Started';
+                document.getElementById('stat-productivity-label').textContent = scoreLabel;
+
+                // Priority Tasks Snapshot
+                const tasksContainer = document.getElementById('dashboard-tasks-list');
+                const pendingList = [...this.store.state.tasks]
+                    .filter(t => !t.completed)
+                    .sort((a, b) => {
+                        const weight = { high: 3, medium: 2, low: 1 };
+                        return (weight[b.priority] || 1) - (weight[a.priority] || 1);
+                    })
+                    .slice(0, 4);
+
+                if (pendingList.length === 0) {
+                    tasksContainer.innerHTML = `
+                        <div class="text-center py-8 px-4 rounded-xl bg-slate-50 dark:bg-dark-850 border border-dashed border-slate-200 dark:border-slate-800">
+                            <i class="fa-solid fa-circle-check text-2xl text-emerald-400 mb-2"></i>
+                            <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">All tasks completed!</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Add a new study or coding task to stay ahead.</p>
+                        </div>
+                    `;
+                } else {
+                    tasksContainer.innerHTML = pendingList.map(task => {
+                        const prioBadge = task.priority === 'high'
+                            ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                            : task.priority === 'medium'
+                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                : 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+                        return `
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200/60 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition">
+                                <div class="flex items-center space-x-3 min-w-0">
+                                    <button onclick="App.toggleTask('${task.id}')" class="w-5 h-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 hover:border-indigo-500 flex items-center justify-center transition shrink-0" title="Complete Task"></button>
+                                    <div class="min-w-0">
+                                        <p class="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 truncate">${Utils.escapeHTML(task.title)}</p>
+                                        <div class="flex items-center space-x-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                                            <span>${Utils.escapeHTML(task.category)}</span>
+                                            <span>•</span>
+                                            <span><i class="fa-regular fa-calendar mr-1"></i>${Utils.formatDate(task.dueDate)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full border ${prioBadge} shrink-0 ml-2">${Utils.escapeHTML(task.priority)}</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // Active Goals Snapshot
+                const goalsContainer = document.getElementById('dashboard-goals-list');
+                const topGoals = this.store.state.goals.slice(0, 3);
+                if (topGoals.length === 0) {
+                    goalsContainer.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">No active goals yet. Create your first milestone!</p>`;
+                } else {
+                    goalsContainer.innerHTML = topGoals.map(goal => `
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200/60 dark:border-slate-800/80 space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">${Utils.escapeHTML(goal.title)}</span>
+                                <div class="flex items-center space-x-1.5 shrink-0">
+                                    <span class="text-xs font-mono font-bold text-emerald-400">${goal.progress}%</span>
+                                    <button onclick="App.StepGoalProgress('${goal.id}', 10)" class="px-1.5 py-0.5 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 text-[10px] font-mono font-semibold transition">+10%</button>
+                                </div>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-200 dark:bg-dark-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: ${goal.progress}%"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Recent Study Notes Snapshot
+                const recentNotesEl = document.getElementById('dashboard-recent-notes');
+                const recentNotes = [...this.store.state.notes]
+                    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+                    .slice(0, 4);
+
+                if (recentNotes.length === 0) {
+                    recentNotesEl.innerHTML = `<div class="sm:col-span-2 text-center py-6 text-xs text-slate-400">Your Knowledge Vault is empty. Create your first study note!</div>`;
+                } else {
+                    recentNotesEl.innerHTML = recentNotes.map(note => `
+                        <div onclick="App.openNoteReader('${note.id}')" class="cursor-pointer p-3.5 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200/60 dark:border-slate-800/80 card-hover flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-1.5">
+                                    <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent-soft text-accent">${Utils.escapeHTML(note.subject)}</span>
+                                    ${note.pinned ? '<i class="fa-solid fa-thumbtack text-amber-400 text-xs"></i>' : ''}
+                                </div>
+                                <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-1">${Utils.escapeHTML(note.title)}</h4>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">${Utils.escapeHTML(note.content)}</p>
+                            </div>
+                            <div class="mt-2.5 pt-2 border-t border-slate-200/50 dark:border-slate-800/60 text-[10px] font-mono text-slate-400">
+                                Updated ${Utils.timeAgo(note.updatedAt)}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Quick Launchpad Links
+                const quickLinksEl = document.getElementById('dashboard-quick-links');
+                quickLinksEl.innerHTML = this.store.state.links.slice(0, 4).map(link => `
+                    <a href="${Utils.escapeHTML(link.url)}" target="_blank" rel="noopener noreferrer" class="p-2.5 rounded-xl bg-slate-50 dark:bg-dark-850 border border-slate-200/60 dark:border-slate-800 hover:border-indigo-500/40 flex items-center space-x-2.5 transition group">
+                        <div class="w-8 h-8 rounded-lg bg-accent-soft text-accent flex items-center justify-center shrink-0">
+                            <i class="${Utils.escapeHTML(link.icon || 'fa-solid fa-arrow-up-right-from-square')} text-xs"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate group-hover:text-accent">${Utils.escapeHTML(link.title)}</div>
+                            <div class="text-[10px] text-slate-400 truncate">${Utils.escapeHTML(link.category)}</div>
+                        </div>
+                    </a>
+                `).join('');
+
+                // Activity Feed
+                const activityEl = document.getElementById('dashboard-activity-feed');
+                activityEl.innerHTML = this.store.state.activities.slice(0, 6).map(act => `
+                    <div class="flex items-center justify-between text-xs py-1">
+                        <div class="flex items-center space-x-2 truncate">
+                            <i class="fa-solid ${Utils.escapeHTML(act.icon)} text-accent text-[11px]"></i>
+                            <span class="text-slate-600 dark:text-slate-300 truncate">${Utils.escapeHTML(act.text)}</span>
+                        </div>
+                        <span class="text-[10px] font-mono text-slate-400 shrink-0 ml-2">${Utils.timeAgo(act.time)}</span>
+                    </div>
+                `).join('');
+            },
+
+            /* --------------------------------------------------------------------
+               MODULE B: STUDY NOTES & KNOWLEDGE VAULT CRUD
+               -------------------------------------------------------------------- */
+            setNoteSubjectFilter(subject) {
+                this.noteSubjectFilter = subject;
+                this.renderNotes();
+            },
+
+            renderNotes() {
+                const subjects = ['All', 'Mathematics', 'Science', 'Computer Science', 'English', 'History', 'General'];
+                const filterBar = document.getElementById('notes-subject-filters');
+                filterBar.innerHTML = subjects.map(sub => {
+                    const active = this.noteSubjectFilter === sub;
+                    return `
+                        <button onclick="App.setNoteSubjectFilter('${sub}')" class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${active ? 'bg-accent text-white shadow-sm' : 'bg-white dark:bg-dark-900 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white'}">
+                            ${sub}
+                        </button>
+                    `;
+                }).join('');
+
+                const query = (document.getElementById('notes-search-input')?.value || '').toLowerCase().trim();
+                const filtered = [...this.store.state.notes]
+                    .filter(n => {
+                        const matchesSubject = this.noteSubjectFilter === 'All' || n.subject === this.noteSubjectFilter;
+                        const matchesQuery = !query ||
+                            n.title.toLowerCase().includes(query) ||
+                            n.content.toLowerCase().includes(query) ||
+                            n.subject.toLowerCase().includes(query);
+                        return matchesSubject && matchesQuery;
+                    })
+                    .sort((a, b) => (b.pinned === a.pinned ? new Date(b.updatedAt) - new Date(a.updatedAt) : b.pinned ? 1 : -1));
+
+                const grid = document.getElementById('notes-grid-container');
+                if (filtered.length === 0) {
+                    grid.innerHTML = `
+                        <div class="md:col-span-2 lg:col-span-3 rounded-2xl bg-white dark:bg-dark-900 border border-dashed border-slate-300 dark:border-slate-800 p-12 text-center space-y-3">
+                            <div class="w-12 h-12 rounded-2xl bg-accent-soft text-accent flex items-center justify-center mx-auto text-xl">
+                                <i class="fa-solid fa-book-open"></i>
+                            </div>
+                            <h3 class="font-bold text-base text-slate-800 dark:text-white">No matching study notes found</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">Create a new note for your Class X subjects or clear your active search filters.</p>
+                            <button onclick="App.openNoteModal()" class="px-4 py-2 rounded-xl bg-accent text-white text-xs font-semibold shadow">+ Create Note</button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = filtered.map(note => `
+                    <article class="rounded-2xl bg-white dark:bg-dark-900 border ${note.pinned ? 'border-amber-500/40' : 'border-slate-200/80 dark:border-slate-800/80'} p-5 flex flex-col justify-between card-hover shadow-sm">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-accent-soft text-accent">${Utils.escapeHTML(note.subject)}</span>
+                                <div class="flex items-center space-x-1">
+                                    <button onclick="App.togglePinNote('${note.id}')" class="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center justify-center ${note.pinned ? 'text-amber-400' : 'text-slate-400'}" title="${note.pinned ? 'Unpin' : 'Pin to top'}">
+                                        <i class="fa-solid fa-thumbtack text-xs"></i>
+                                    </button>
+                                    <button onclick="App.openNoteModal('${note.id}')" class="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center" title="Edit Note">
+                                        <i class="fa-solid fa-pen text-xs"></i>
+                                    </button>
+                                    <button onclick="App.deleteNote('${note.id}')" class="w-7 h-7 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 flex items-center justify-center" title="Delete Note">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <h3 onclick="App.openNoteReader('${note.id}')" class="cursor-pointer font-bold text-base text-slate-900 dark:text-white hover:text-accent transition line-clamp-1">${Utils.escapeHTML(note.title)}</h3>
+                            <p onclick="App.openNoteReader('${note.id}')" class="cursor-pointer text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 line-clamp-4 whitespace-pre-line leading-relaxed">${Utils.escapeHTML(note.content)}</p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                            <span>${Utils.timeAgo(note.updatedAt)}</span>
+                            <button onclick="App.openNoteReader('${note.id}')" class="font-sans font-semibold text-accent hover:underline">Read Full &rarr;</button>
+                        </div>
+                    </article>
+                `).join('');
+            },
+
+            openNoteModal(noteId = null) {
+                const modal = document.getElementById('modal-note');
+                const titleHeading = document.getElementById('modal-note-title');
+                const idInput = document.getElementById('note-id-input');
+                const titleInput = document.getElementById('note-title-input');
+                const subjectInput = document.getElementById('note-subject-input');
+                const contentInput = document.getElementById('note-content-input');
+                const pinInput = document.getElementById('note-pin-input');
+
+                if (noteId) {
+                    const note = this.store.state.notes.find(n => n.id === noteId);
+                    if (!note) return;
+                    titleHeading.textContent = 'Edit Study Note';
+                    idInput.value = note.id;
+                    titleInput.value = note.title;
+                    subjectInput.value = note.subject;
+                    contentInput.value = note.content;
+                    pinInput.checked = !!note.pinned;
+                } else {
+                    titleHeading.textContent = 'Create Study Note';
+                    idInput.value = '';
+                    titleInput.value = '';
+                    subjectInput.value = 'Mathematics';
+                    contentInput.value = '';
+                    pinInput.checked = false;
+                }
+                modal.classList.remove('hidden');
+                titleInput.focus();
+            },
+
+            saveNote() {
+                const id = document.getElementById('note-id-input').value;
+                const title = document.getElementById('note-title-input').value.trim();
+                const subject = document.getElementById('note-subject-input').value;
+                const content = document.getElementById('note-content-input').value.trim();
+                const pinned = document.getElementById('note-pin-input').checked;
+
+                if (!title || !content) {
+                    this.notify('Please provide both a note title and content.', 'error');
+                    return;
+                }
+
+                const now = new Date().toISOString();
+                if (id) {
+                    const idx = this.store.state.notes.findIndex(n => n.id === id);
+                    if (idx > -1) {
+                        this.store.state.notes[idx] = { ...this.store.state.notes[idx], title, subject, content, pinned, updatedAt: now };
+                        this.store.logActivity(`Updated note "${title}"`, 'fa-pen-to-square');
+                    }
+                } else {
+                    this.store.state.notes.unshift({
+                        id: Utils.uid('note'),
+                        title,
+                        subject,
+                        content,
+                        pinned,
+                        createdAt: now,
+                        updatedAt: now
+                    });
+                    this.store.logActivity(`Created note "${title}"`, 'fa-book');
+                }
+
+                this.store.save();
+                this.closeModal('modal-note');
+                this.renderAll();
+                this.notify('Note saved to Knowledge Vault!', 'success');
+            },
+
+            openNoteReader(noteId) {
+                const note = this.store.state.notes.find(n => n.id === noteId);
+                if (!note) return;
+
+                document.getElementById('reader-note-subject').textContent = note.subject;
+                document.getElementById('reader-note-title').textContent = note.title;
+                document.getElementById('reader-note-meta').textContent = `Last modified ${Utils.timeAgo(note.updatedAt)} • ${note.content.split(/\s+/).length} words`;
+                document.getElementById('reader-note-body').textContent = note.content;
+
+                document.getElementById('reader-copy-btn').onclick = () => Utils.copyToClipboard(`${note.title}\n\n${note.content}`, 'Note copied to clipboard!');
+                document.getElementById('reader-edit-btn').onclick = () => {
+                    this.closeModal('modal-note-reader');
+                    this.openNoteModal(note.id);
+                };
+
+                document.getElementById('modal-note-reader').classList.remove('hidden');
+            },
+
+            togglePinNote(noteId) {
+                const note = this.store.state.notes.find(n => n.id === noteId);
+                if (!note) return;
+                note.pinned = !note.pinned;
+                this.store.save();
+                this.renderAll();
+                this.notify(note.pinned ? 'Note pinned to top' : 'Note unpinned', 'info');
+            },
+
+            deleteNote(noteId) {
+                const note = this.store.state.notes.find(n => n.id === noteId);
+                if (!note) return;
+                this.openConfirmModal(
+                    'Delete Study Note?',
+                    `Are you sure you want to permanently delete "${note.title}"?`,
+                    () => {
+                        this.store.state.notes = this.store.state.notes.filter(n => n.id !== noteId);
+                        this.store.logActivity(`Deleted note "${note.title}"`, 'fa-trash');
+                        this.renderAll();
+                        this.notify('Note removed from vault', 'info');
+                    }
+                );
+            },
+
+            /* --------------------------------------------------------------------
+               MODULE C: TASKS & GOALS CRUD
+               -------------------------------------------------------------------- */
+            setTaskFilter(filter) {
+                this.taskStatusFilter = filter;
+                this.renderTasksAndGoals();
+            },
+
+            renderTasksAndGoals(stats = this.calculateStats()) {
+                // Highlight active task filter button
+                document.querySelectorAll('[data-task-filter]').forEach(btn => {
+                    const active = btn.getAttribute('data-task-filter') === this.taskStatusFilter;
+                    btn.className = `px-3 py-1.5 rounded-xl text-xs font-semibold transition ${active ? 'bg-accent text-white shadow-sm' : 'bg-white dark:bg-dark-900 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-800'}`;
+                });
+
+                const filteredTasks = [...this.store.state.tasks].filter(t => {
+                    if (this.taskStatusFilter === 'pending') return !t.completed;
+                    if (this.taskStatusFilter === 'completed') return t.completed;
+                    if (this.taskStatusFilter === 'high') return t.priority === 'high';
+                    return true;
+                });
+
+                document.getElementById('tasks-count-summary').textContent = `${filteredTasks.length} shown • ${stats.completedTasks}/${stats.totalTasks} done`;
+
+                const taskContainer = document.getElementById('tasks-list-container');
+                if (filteredTasks.length === 0) {
+                    taskContainer.innerHTML = `
+                        <div class="rounded-2xl bg-white dark:bg-dark-900 border border-dashed border-slate-300 dark:border-slate-800 p-8 text-center">
+                            <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">No tasks in this view</p>
+                            <p class="text-xs text-slate-400 mt-1">Click "New Task" above to add an action item.</p>
+                        </div>
+                    `;
+                } else {
+                    taskContainer.innerHTML = filteredTasks.map(task => {
+                        const prioBadge = task.priority === 'high'
+                            ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                            : task.priority === 'medium'
+                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                : 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+
+                        return `
+                            <div class="p-4 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-3 shadow-sm transition">
+                                <div class="flex items-start space-x-3.5 min-w-0">
+                                    <button onclick="App.toggleTask('${task.id}')" class="mt-0.5 w-5 h-5 rounded-lg border-2 flex items-center justify-center transition shrink-0 ${task.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 dark:border-slate-600 hover:border-indigo-500'}">
+                                        ${task.completed ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                                    </button>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-semibold ${task.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}">${Utils.escapeHTML(task.title)}</p>
+                                        <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                            <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-dark-800 font-medium">${Utils.escapeHTML(task.category)}</span>
+                                            <span><i class="fa-regular fa-calendar mr-1"></i>${Utils.formatDate(task.dueDate)}</span>
+                                            <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full border ${prioBadge}">${Utils.escapeHTML(task.priority)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-1 shrink-0">
+                                    <button onclick="App.openTaskModal('${task.id}')" class="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center" title="Edit Task">
+                                        <i class="fa-solid fa-pen text-xs"></i>
+                                    </button>
+                                    <button onclick="App.deleteTask('${task.id}')" class="w-8 h-8 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 flex items-center justify-center" title="Delete Task">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // Render Goals
+                document.getElementById('goals-avg-badge').textContent = `${stats.avgGoalProgress}% Avg`;
+                const goalsContainer = document.getElementById('goals-list-container');
+                if (this.store.state.goals.length === 0) {
+                    goalsContainer.innerHTML = `<div class="p-6 rounded-2xl bg-white dark:bg-dark-900 border border-dashed border-slate-300 dark:border-slate-800 text-center text-xs text-slate-400">No goals created yet.</div>`;
+                } else {
+                    goalsContainer.innerHTML = this.store.state.goals.map(goal => `
+                        <div class="p-4 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 space-y-3 shadow-sm">
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${Utils.escapeHTML(goal.type)}</span>
+                                    <h4 class="font-bold text-sm text-slate-900 dark:text-white mt-1.5">${Utils.escapeHTML(goal.title)}</h4>
+                                </div>
+                                <button onclick="App.deleteGoal('${goal.id}')" class="w-7 h-7 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 flex items-center justify-center">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-slate-500 dark:text-slate-400">Completion Progress</span>
+                                    <span class="font-mono font-bold text-emerald-400">${goal.progress}%</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-100 dark:bg-dark-800 rounded-full overflow-hidden">
+                                    <div class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: ${goal.progress}%"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between pt-1">
+                                <div class="flex items-center space-x-1.5">
+                                    <button onclick="App.StepGoalProgress('${goal.id}', -10)" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 text-xs font-mono font-semibold">-10%</button>
+                                    <button onclick="App.StepGoalProgress('${goal.id}', 10)" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 text-xs font-mono font-semibold">+10%</button>
+                                </div>
+                                <button onclick="App.StepGoalProgress('${goal.id}', 100)" class="text-xs font-semibold text-accent hover:underline">Mark 100%</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            },
+
+            openTaskModal(taskId = null) {
+                const modal = document.getElementById('modal-task');
+                const heading = document.getElementById('modal-task-heading');
+                const idInput = document.getElementById('task-id-input');
+                const titleInput = document.getElementById('task-title-input');
+                const prioInput = document.getElementById('task-priority-input');
+                const catInput = document.getElementById('task-category-input');
+                const dueInput = document.getElementById('task-due-input');
+
+                if (taskId) {
+                    const t = this.store.state.tasks.find(x => x.id === taskId);
+                    if (!t) return;
+                    heading.textContent = 'Edit Task';
+                    idInput.value = t.id;
+                    titleInput.value = t.title;
+                    prioInput.value = t.priority;
+                    catInput.value = t.category;
+                    dueInput.value = t.dueDate || '';
+                } else {
+                    heading.textContent = 'Add New Task';
+                    idInput.value = '';
+                    titleInput.value = '';
+                    prioInput.value = 'high';
+                    catInput.value = 'Mathematics';
+                    dueInput.value = new Date().toISOString().split('T')[0];
+                }
+                modal.classList.remove('hidden');
+                titleInput.focus();
+            },
+
+            saveTask() {
+                const id = document.getElementById('task-id-input').value;
+                const title = document.getElementById('task-title-input').value.trim();
+                const priority = document.getElementById('task-priority-input').value;
+                const category = document.getElementById('task-category-input').value;
+                const dueDate = document.getElementById('task-due-input').value;
+
+                if (!title) {
+                    this.notify('Please enter a task description', 'error');
+                    return;
+                }
+
+                if (id) {
+                    const idx = this.store.state.tasks.findIndex(t => t.id === id);
+                    if (idx > -1) {
+                        this.store.state.tasks[idx] = { ...this.store.state.tasks[idx], title, priority, category, dueDate };
+                        this.store.logActivity(`Updated task "${title}"`, 'fa-pen');
+                    }
+                } else {
+                    this.store.state.tasks.unshift({
+                        id: Utils.uid('task'),
+                        title,
+                        priority,
+                        category,
+                        dueDate,
+                        completed: false,
+                        createdAt: new Date().toISOString()
+                    });
+                    this.store.logActivity(`Added task "${title}"`, 'fa-plus');
+                }
+
+                this.store.save();
+                this.closeModal('modal-task');
+                this.renderAll();
+                this.notify('Task saved!', 'success');
+            },
+
+            toggleTask(taskId) {
+                const task = this.store.state.tasks.find(t => t.id === taskId);
+                if (!task) return;
+                task.completed = !task.completed;
+                this.store.logActivity(`${task.completed ? 'Completed' : 'Reopened'} task "${task.title}"`, 'fa-check-double');
+                this.renderAll();
+                if (task.completed) this.notify('Task completed! Great execution.', 'success');
+            },
+
+            deleteTask(taskId) {
+                const task = this.store.state.tasks.find(t => t.id === taskId);
+                if (!task) return;
+                this.openConfirmModal('Delete Task?', `Remove "${task.title}" from your task list?`, () => {
+                    this.store.state.tasks = this.store.state.tasks.filter(t => t.id !== taskId);
+                    this.store.save();
+                    this.renderAll();
+                    this.notify('Task deleted', 'info');
+                });
+            },
+
+            openGoalModal() {
+                document.getElementById('goal-id-input').value = '';
+                document.getElementById('goal-title-input').value = '';
+                document.getElementById('goal-progress-input').value = 20;
+                document.getElementById('goal-modal-pct-label').textContent = '20%';
+                document.getElementById('modal-goal').classList.remove('hidden');
+                document.getElementById('goal-title-input').focus();
+            },
+
+            saveGoal() {
+                const title = document.getElementById('goal-title-input').value.trim();
+                const type = document.getElementById('goal-type-input').value;
+                const progress = Number(document.getElementById('goal-progress-input').value) || 0;
+
+                if (!title) {
+                    this.notify('Please enter a goal title', 'error');
+                    return;
+                }
+
+                this.store.state.goals.unshift({
+                    id: Utils.uid('goal'),
+                    title,
+                    type,
+                    progress: Math.min(100, Math.max(0, progress)),
+                    updatedAt: new Date().toISOString()
+                });
+                this.store.logActivity(`Set new goal "${title}"`, 'fa-bullseye');
+                this.closeModal('modal-goal');
+                this.renderAll();
+                this.notify('New goal added!', 'success');
+            },
+
+            StepGoalProgress(goalId, delta) {
+                const goal = this.store.state.goals.find(g => g.id === goalId);
+                if (!goal) return;
+                if (delta === 100) goal.progress = 100;
+                else goal.progress = Math.min(100, Math.max(0, (Number(goal.progress) || 0) + delta));
+                goal.updatedAt = new Date().toISOString();
+                this.store.logActivity(`Updated goal "${goal.title}" to ${goal.progress}%`, 'fa-chart-line');
+                this.renderAll();
+            },
+
+            deleteGoal(goalId) {
+                const goal = this.store.state.goals.find(g => g.id === goalId);
+                if (!goal) return;
+                this.openConfirmModal('Remove Goal?', `Delete "${goal.title}" from your goals tracker?`, () => {
+                    this.store.state.goals = this.store.state.goals.filter(g => g.id !== goalId);
+                    this.store.save();
+                    this.renderAll();
+                    this.notify('Goal removed', 'info');
+                });
+            },
+
+            /* --------------------------------------------------------------------
+               MODULE D: QUICK LINKS HUB CRUD
+               -------------------------------------------------------------------- */
+            setLinkCategory(cat) {
+                this.linkCategoryFilter = cat;
+                this.renderLinks();
+            },
+
+            renderLinks() {
+                const categories = ['All', 'Study', 'Workspace', 'Coding', 'AI'];
+                const filterContainer = document.getElementById('links-category-filters');
+                filterContainer.innerHTML = categories.map(cat => {
+                    const active = this.linkCategoryFilter === cat;
+                    return `
+                        <button onclick="App.setLinkCategory('${cat}')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${active ? 'bg-accent text-white shadow-sm' : 'bg-white dark:bg-dark-900 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-800'}">
+                            ${cat}
+                        </button>
+                    `;
+                }).join('');
+
+                const filtered = this.store.state.links.filter(l => this.linkCategoryFilter === 'All' || l.category === this.linkCategoryFilter);
+                const grid = document.getElementById('links-grid-container');
+
+                grid.innerHTML = filtered.map(link => `
+                    <div class="rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 p-5 flex flex-col justify-between card-hover shadow-sm group">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-10 h-10 rounded-xl bg-accent-soft text-accent flex items-center justify-center text-base">
+                                    <i class="${Utils.escapeHTML(link.icon || 'fa-solid fa-link')}"></i>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <button onclick="App.openLinkModal('${link.id}')" class="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center" title="Edit Link">
+                                        <i class="fa-solid fa-pen text-xs"></i>
+                                    </button>
+                                    <button onclick="App.deleteLink('${link.id}')" class="w-7 h-7 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 flex items-center justify-center" title="Remove Link">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-base text-slate-900 dark:text-white">${Utils.escapeHTML(link.title)}</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">${Utils.escapeHTML(link.desc || link.url)}</p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400">${Utils.escapeHTML(link.category)}</span>
+                            <a href="${Utils.escapeHTML(link.url)}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-accent hover:underline flex items-center gap-1">
+                                <span>Launch</span><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            openLinkModal(linkId = null) {
+                const modal = document.getElementById('modal-link');
+                const heading = document.getElementById('modal-link-heading');
+                const idInput = document.getElementById('link-id-input');
+                const titleInput = document.getElementById('link-title-input');
+                const urlInput = document.getElementById('link-url-input');
+                const catInput = document.getElementById('link-category-input');
+                const descInput = document.getElementById('link-desc-input');
+
+                if (linkId) {
+                    const l = this.store.state.links.find(x => x.id === linkId);
+                    if (!l) return;
+                    heading.textContent = 'Edit Quick Link';
+                    idInput.value = l.id;
+                    titleInput.value = l.title;
+                    urlInput.value = l.url;
+                    catInput.value = l.category;
+                    descInput.value = l.desc || '';
+                } else {
+                    heading.textContent = 'Add Quick Link';
+                    idInput.value = '';
+                    titleInput.value = '';
+                    urlInput.value = 'https://';
+                    catInput.value = 'Study';
+                    descInput.value = '';
+                }
+                modal.classList.remove('hidden');
+                titleInput.focus();
+            },
+
+            saveLink() {
+                const id = document.getElementById('link-id-input').value;
+                const title = document.getElementById('link-title-input').value.trim();
+                let url = document.getElementById('link-url-input').value.trim();
+                const category = document.getElementById('link-category-input').value;
+                const desc = document.getElementById('link-desc-input').value.trim();
+
+                if (!title || !url) {
+                    this.notify('Please provide both a name and valid URL', 'error');
+                    return;
+                }
+                if (!/^https?:\/\//i.test(url)) {
+                    url = 'https://' + url;
+                }
+
+                if (id) {
+                    const idx = this.store.state.links.findIndex(l => l.id === id);
+                    if (idx > -1) {
+                        this.store.state.links[idx] = { ...this.store.state.links[idx], title, url, category, desc };
+                    }
+                } else {
+                    this.store.state.links.push({
+                        id: Utils.uid('lnk'),
+                        title,
+                        url,
+                        category,
+                        desc: desc || 'Custom resource shortcut',
+                        icon: 'fa-solid fa-globe'
+                    });
+                }
+
+                this.store.save();
+                this.closeModal('modal-link');
+                this.renderAll();
+                this.notify('Quick link saved!', 'success');
+            },
+
+            deleteLink(linkId) {
+                const link = this.store.state.links.find(l => l.id === linkId);
+                if (!link) return;
+                this.openConfirmModal('Remove Quick Link?', `Delete shortcut for "${link.title}"?`, () => {
+                    this.store.state.links = this.store.state.links.filter(l => l.id !== linkId);
+                    this.store.save();
+                    this.renderAll();
+                    this.notify('Shortcut removed', 'info');
+                });
+            },
+
+            /* --------------------------------------------------------------------
+               MODULE E: AI INTEGRATION HUB & PROMPT ORCHESTRATOR
+               -------------------------------------------------------------------- */
+            renderAIHub() {
+                const platformsGrid = document.getElementById('ai-platforms-grid');
+                platformsGrid.innerHTML = this.aiPlatforms.map(p => `
+                    <div class="rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 p-5 flex flex-col justify-between card-hover shadow-sm">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-11 h-11 rounded-xl border ${p.color} flex items-center justify-center text-lg">
+                                    <i class="${p.icon}"></i>
+                                </div>
+                                <span class="text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-slate-300">${p.tag}</span>
+                            </div>
+                            <h4 class="font-bold text-base text-slate-900 dark:text-white">${p.name}</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">${p.desc}</p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex justify-end">
+                            <a href="${p.url}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl bg-accent text-white text-xs font-semibold flex items-center space-x-1.5 shadow-sm transition">
+                                <span>Launch Workspace</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+
+                const promptsGrid = document.getElementById('ai-prompts-grid');
+                promptsGrid.innerHTML = this.store.state.prompts.map(prm => `
+                    <div class="rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-800/80 p-5 flex flex-col justify-between shadow-sm">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span class="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${Utils.escapeHTML(prm.tag)}</span>
+                                <button onclick="App.deletePrompt('${prm.id}')" class="text-slate-400 hover:text-rose-500 text-xs" title="Delete Prompt">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                            <h4 class="font-bold text-sm text-slate-900 dark:text-white">${Utils.escapeHTML(prm.title)}</h4>
+                            <p class="text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-dark-850 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800 mt-2.5 leading-relaxed">${Utils.escapeHTML(prm.body)}</p>
+                        </div>
+                        <div class="mt-3 flex justify-end">
+                            <button onclick="App.copyPromptById('${prm.id}')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-700 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center space-x-1.5 transition">
+                                <i class="fa-regular fa-copy text-accent"></i><span>Copy Prompt Formula</span>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            copyPromptById(promptId) {
+                const prm = this.store.state.prompts.find(p => p.id === promptId);
+                if (!prm) return;
+                Utils.copyToClipboard(prm.body, `Copied "${prm.title}" prompt!`);
+            },
+
+            openPromptModal() {
+                document.getElementById('prompt-title-input').value = '';
+                document.getElementById('prompt-tag-input').value = 'Custom Workflow';
+                document.getElementById('prompt-body-input').value = '';
+                document.getElementById('modal-prompt').classList.remove('hidden');
+                document.getElementById('prompt-title-input').focus();
+            },
+
+            saveCustomPrompt() {
+                const title = document.getElementById('prompt-title-input').value.trim();
+                const tag = document.getElementById('prompt-tag-input').value.trim() || 'AI Prompt';
+                const body = document.getElementById('prompt-body-input').value.trim();
+
+                if (!title || !body) {
+                    this.notify('Please enter both a prompt title and template text', 'error');
+                    return;
+                }
+
+                this.store.state.prompts.unshift({
+                    id: Utils.uid('prm'),
+                    title,
+                    tag,
+                    body
+                });
+                this.store.logActivity(`Added AI prompt "${title}"`, 'fa-wand-magic-sparkles');
+                this.closeModal('modal-prompt');
+                this.renderAIHub();
+                this.notify('Custom AI prompt saved!', 'success');
+            },
+
+            deletePrompt(promptId) {
+                this.store.state.prompts = this.store.state.prompts.filter(p => p.id !== promptId);
+                this.store.save();
+                this.renderAIHub();
+                this.notify('Prompt removed', 'info');
+            },
+
+            /* --------------------------------------------------------------------
+               MODULE F: DATA BACKUP, RESTORE & RESET
+               -------------------------------------------------------------------- */
+            exportData() {
+                const dataStr = JSON.stringify(this.store.state, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const dateStamp = new Date().toISOString().split('T')[0];
+                a.href = url;
+                a.download = `saidul-workspace-backup-${dateStamp}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.notify('Workspace JSON backup downloaded!', 'success');
+            },
+
+            importData(event) {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        const validated = this.store.validateAndHeal(imported);
+                        this.store.save(validated);
+                        this.applyPreferences();
+                        this.renderAll();
+                        this.notify('Workspace backup restored successfully!', 'success');
+                    } catch (err) {
+                        this.notify('Invalid JSON backup file.', 'error');
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            },
+
+            confirmResetDemoData() {
+                this.openConfirmModal(
+                    'Restore Sample Study Data?',
+                    'This will reset your workspace to Saidul\'s default Class X notes, tasks, and AI prompts.',
+                    () => {
+                        const defaults = SeedFactory.getDefaultState();
+                        this.store.save(defaults);
+                        this.applyPreferences();
+                        this.renderAll();
+                        this.notify('Default sample data restored!', 'success');
+                    }
+                );
+            },
+
+            confirmClearAllData() {
+                this.openConfirmModal(
+                    'Clear All Workspace Data?',
+                    'This will permanently delete all notes, tasks, and goals stored in this browser. Export a backup first if needed.',
+                    () => {
+                        const emptyState = {
+                            ...SeedFactory.getDefaultState(),
+                            notes: [],
+                            tasks: [],
+                            goals: [],
+                            activities: [{ id: Utils.uid('act'), text: 'Cleared workspace storage', time: new Date().toISOString(), icon: 'fa-broom' }]
+                        };
+                        this.store.save(emptyState);
+                        this.renderAll();
+                        this.notify('All workspace notes, tasks, and goals cleared.', 'info');
+                    }
+                );
+            },
+
+            /* --------------------------------------------------------------------
+               MODAL & TOAST NOTIFICATION ENGINE
+               -------------------------------------------------------------------- */
+            closeModal(modalId) {
+                const el = document.getElementById(modalId);
+                if (el) el.classList.add('hidden');
+            },
+
+            openConfirmModal(title, message, onConfirm) {
+                document.getElementById('confirm-modal-title').textContent = title;
+                document.getElementById('confirm-modal-message').textContent = message;
+                const btn = document.getElementById('confirm-modal-action-btn');
+                btn.onclick = () => {
+                    this.closeModal('modal-confirm');
+                    if (typeof onConfirm === 'function') onConfirm();
+                };
+                document.getElementById('modal-confirm').classList.remove('hidden');
+            },
+
+            notify(message, type = 'info') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                const styles = {
+                    success: 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-emerald-500/40',
+                    error: 'bg-rose-600 text-white border-rose-400',
+                    info: 'bg-slate-900 dark:bg-dark-800 text-white border-slate-700'
+                };
+                const icons = {
+                    success: 'fa-circle-check text-emerald-400 dark:text-emerald-600',
+                    error: 'fa-circle-exclamation text-white',
+                    info: 'fa-bolt text-accent'
+                };
+
+                toast.className = `pointer-events-auto flex items-center space-x-2.5 px-4 py-3 rounded-xl border shadow-xl text-xs font-semibold transition-all duration-300 ${styles[type] || styles.info}`;
+                toast.innerHTML = `
+                    <i class="fa-solid ${icons[type] || icons.info} text-sm"></i>
+                    <span>${Utils.escapeHTML(message)}</span>
+                `;
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(8px)';
+                    setTimeout(() => toast.remove(), 250);
+                }, 2800);
+            }
+        };
+
+        // Start the application once the DOM is ready
+        window.addEventListener('DOMContentLoaded', () => {
+            App.init();
+        });
+    </script>
+</body>
+</html>
