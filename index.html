@@ -1,1387 +1,771 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WinCloud Explorer — Online File Storage & Document Portal</title>
-
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Segoe UI"', 'Inter', 'system-ui', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'Consolas', 'monospace']
-          }
-        }
-      }
-    };
-  </script>
-
-  <!-- FontAwesome 6 Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
-  <!-- React 18 + ReactDOM + Babel + Supabase JS SDK v2 -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.55); }
-  </style>
-</head>
-
-<body class="bg-slate-100 dark:bg-[#0b0f19] text-slate-800 dark:text-slate-100 h-screen overflow-hidden select-none font-sans">
-  <div id="root" class="h-full w-full"></div>
-
-  <script type="text/babel">
-    const { useState, useEffect, useMemo, useRef } = React;
-
-    // ============================================================================
-    // 1. DEFAULT CLOUD CONFIGURATION
-    // Paste your Supabase URL and Anon Key here before deploying to GitHub/Vercel
-    // so every visitor worldwide connects automatically without manual setup.
-    // ============================================================================
-    const DEFAULT_CONFIG = {
-      supabaseUrl: "", // e.g., "https://xyzproject.supabase.co"
-      supabaseKey: "", // e.g., "eyJhbGciOiJIUzI1NiIsInR5cCI6..."
-      bucketName: "cloud-drive",
-      adminPass: "saidul123"
-    };
-
-    // ============================================================================
-    // 2. LOCAL INDEXEDDB BINARY FALLBACK (For testing before Supabase is linked)
-    // ============================================================================
-    const LocalBlobDB = {
-      dbName: "WinCloudBinaryDB",
-      storeName: "blobs",
-      open() {
-        return new Promise((resolve, reject) => {
-          const req = indexedDB.open(this.dbName, 1);
-          req.onupgradeneeded = e => e.target.result.createObjectStore(this.storeName);
-          req.onsuccess = e => resolve(e.target.result);
-          req.onerror = e => reject(e);
-        });
-      },
-      async saveBlob(id, fileBlob) {
-        const db = await this.open();
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction(this.storeName, "readwrite");
-          tx.objectStore(this.storeName).put(fileBlob, id);
-          tx.oncomplete = () => resolve(URL.createObjectURL(fileBlob));
-          tx.onerror = e => reject(e);
-        });
-      },
-      async getBlobUrl(id) {
-        const db = await this.open();
-        return new Promise(resolve => {
-          const tx = db.transaction(this.storeName, "readonly");
-          const req = tx.objectStore(this.storeName).get(id);
-          req.onsuccess = () => resolve(req.result ? URL.createObjectURL(req.result) : null);
-          req.onerror = () => resolve(null);
-        });
-      },
-      async deleteBlob(id) {
-        const db = await this.open();
-        const tx = db.transaction(this.storeName, "readwrite");
-        tx.objectStore(this.storeName).delete(id);
-      }
-    };
-
-    // Helper: Generate a real valid sample PDF Blob so the demo PDF works immediately
-    function createSamplePdfBlob(title, subtitle) {
-      const pdfContent = `%PDF-1.4
-1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
-2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj
-3 0 obj << /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R >> endobj
-4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj
-5 0 obj << /Length 170 >> stream
-BT
-/F1 20 Tf 50 720 Td (${title}) Tj
-/F1 12 Tf 0 -30 Td (${subtitle}) Tj
-0 -25 Td (Uploaded to WinCloud Explorer - Ready for Global View & Download.) Tj
-ET
-endstream endobj
-xref
-0 6
-0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
-0000000115 00000 n 
-0000000229 00000 n 
-0000000297 00000 n 
-trailer << /Size 6 /Root 1 0 R >>
-startxref
-518
-%%EOF`;
-      return new Blob([pdfContent], { type: "application/pdf" });
-    }
-
-    // Starter Folder Hierarchy & Sample Files
-    const STARTER_ITEMS = [
-      { id: "fld-class10", parent_id: null, type: "folder", name: "Class X (SEBA Board)", size_bytes: 0, created_at: "2026-11-10" },
-      { id: "fld-science", parent_id: "fld-class10", type: "folder", name: "General Science", size_bytes: 0, created_at: "2026-11-10" },
-      { id: "fld-bio", parent_id: "fld-science", type: "folder", name: "Biology", size_bytes: 0, created_at: "2026-11-10" },
-      { id: "fld-sst", parent_id: "fld-class10", type: "folder", name: "Social Science", size_bytes: 0, created_at: "2026-11-10" },
-      { id: "fld-history", parent_id: "fld-sst", type: "folder", name: "History", size_bytes: 0, created_at: "2026-11-10" },
-      { id: "fld-geo", parent_id: "fld-sst", type: "folder", name: "Geography", size_bytes: 0, created_at: "2026-11-10" },
-      { id: "fld-math", parent_id: "fld-class10", type: "folder", name: "Mathematics", size_bytes: 0, created_at: "2026-11-10" },
-      {
-        id: "file-demo-pdf-1",
-        parent_id: "fld-bio",
-        type: "file",
-        name: "Ch-7-Control-and-Coordination-Notes.pdf",
-        file_ext: "pdf",
-        mime_type: "application/pdf",
-        size_bytes: 245760,
-        file_url: "local-sample-pdf-1",
-        created_at: "2026-11-10"
-      },
-      {
-        id: "file-demo-pdf-2",
-        parent_id: "fld-history",
-        type: "file",
-        name: "Ch-1-Indian-Freedom-Movement-Summary.pdf",
-        file_ext: "pdf",
-        mime_type: "application/pdf",
-        size_bytes: 318400,
-        file_url: "local-sample-pdf-2",
-        created_at: "2026-11-10"
-      }
-    ];
-
-    // ============================================================================
-    // 3. FILE ICON & FORMATTER UTILITIES
-    // ============================================================================
-    function getFileVisuals(item) {
-      if (item.type === "folder") {
-        return { icon: "fa-folder", color: "text-amber-400", bg: "bg-amber-500/15", label: "File Folder" };
-      }
-      const ext = (item.file_ext || item.name.split(".").pop() || "").toLowerCase();
-      switch (ext) {
-        case "pdf":
-          return { icon: "fa-file-pdf", color: "text-rose-500", bg: "bg-rose-500/15", label: "PDF Document" };
-        case "doc":
-        case "docx":
-          return { icon: "fa-file-word", color: "text-blue-500", bg: "bg-blue-500/15", label: "Word Document" };
-        case "xls":
-        case "xlsx":
-        case "csv":
-          return { icon: "fa-file-excel", color: "text-emerald-500", bg: "bg-emerald-500/15", label: "Excel Spreadsheet" };
-        case "ppt":
-        case "pptx":
-          return { icon: "fa-file-powerpoint", color: "text-orange-500", bg: "bg-orange-500/15", label: "PowerPoint Deck" };
-        case "png":
-        case "jpg":
-        case "jpeg":
-        case "gif":
-        case "webp":
-        case "svg":
-          return { icon: "fa-file-image", color: "text-purple-400", bg: "bg-purple-500/15", label: "Image File" };
-        case "mp4":
-        case "webm":
-        case "mkv":
-          return { icon: "fa-file-video", color: "text-pink-500", bg: "bg-pink-500/15", label: "Video File" };
-        case "mp3":
-        case "wav":
-          return { icon: "fa-file-audio", color: "text-cyan-400", bg: "bg-cyan-500/15", label: "Audio File" };
-        case "zip":
-        case "rar":
-        case "7z":
-          return { icon: "fa-file-zipper", color: "text-yellow-500", bg: "bg-yellow-500/15", label: "Compressed Archive" };
-        default:
-          return { icon: "fa-file-lines", color: "text-sky-400", bg: "bg-sky-500/15", label: `${ext.toUpperCase() || "DATA"} File` };
-      }
-    }
-
-    function formatBytes(bytes) {
-      if (!bytes || bytes === 0) return "—";
-      const k = 1024;
-      const sizes = ["B", "KB", "MB", "GB"];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-    }
-
-    // ============================================================================
-    // 4. MAIN REACT APPLICATION
-    // ============================================================================
-    function WinCloudExplorerApp() {
-      const [items, setItems] = useState([]);
-      const [currentFolderId, setCurrentFolderId] = useState(null);
-      const [expandedFolders, setExpandedFolders] = useState(new Set(["fld-class10", "fld-science", "fld-bio", "fld-sst"]));
-      const [selectedFile, setSelectedFile] = useState(null);
-      const [resolvedPreviewUrl, setResolvedPreviewUrl] = useState(null);
-      const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'list'
-      const [searchQuery, setSearchQuery] = useState("");
-      const [filterExt, setFilterExt] = useState("ALL");
-      const [isDark, setIsDark] = useState(true);
-
-      // Admin & Cloud States
-      const [isAdmin, setIsAdmin] = useState(false);
-      const [cloudStatus, setCloudStatus] = useState("Initializing...");
-      const [isUploading, setIsUploading] = useState(false);
-      const [uploadProgressText, setUploadProgressText] = useState("");
-      const [showFolderModal, setShowFolderModal] = useState(false);
-      const [newFolderName, setNewFolderName] = useState("");
-      const [showCloudModal, setShowCloudModal] = useState(false);
-      const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-
-      // Cloud Config State
-      const [config, setConfig] = useState(() => {
-        const saved = JSON.parse(localStorage.getItem("wincloud_explorer_cfg") || "{}");
-        return {
-          supabaseUrl: saved.supabaseUrl || DEFAULT_CONFIG.supabaseUrl,
-          supabaseKey: saved.supabaseKey || DEFAULT_CONFIG.supabaseKey,
-          bucketName: saved.bucketName || DEFAULT_CONFIG.bucketName,
-          adminPass: saved.adminPass || DEFAULT_CONFIG.adminPass
-        };
-      });
-
-      const fileInputRef = useRef(null);
-
-      // Create Supabase Client Instance when URL & Key are provided
-      const supabase = useMemo(() => {
-        if (config.supabaseUrl && config.supabaseKey && window.supabase) {
-          try {
-            return window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
-          } catch (e) {
-            console.error("Supabase Client Error:", e);
-            return null;
-          }
-        }
-        return null;
-      }, [config.supabaseUrl, config.supabaseKey]);
-
-      // Initialize App & Sync Data
-      useEffect(() => {
-        loadItemsFromCloudOrCache();
-      }, [supabase]);
-
-      // Resolve Preview URL when a file is clicked
-      useEffect(() => {
-        async function resolveUrl() {
-          if (!selectedFile) {
-            setResolvedPreviewUrl(null);
-            return;
-          }
-          if (selectedFile.file_url === "local-sample-pdf-1") {
-            const blob = createSamplePdfBlob(
-              "Chapter 7: Control and Coordination",
-              "Class X Biology - Synaptic Chemical Transmission & Reflex Arcs"
-            );
-            setResolvedPreviewUrl(URL.createObjectURL(blob));
-          } else if (selectedFile.file_url === "local-sample-pdf-2") {
-            const blob = createSamplePdfBlob(
-              "Chapter 1: Indian Freedom Movement",
-              "Class X History - Key Timeline & National Movement Notes"
-            );
-            setResolvedPreviewUrl(URL.createObjectURL(blob));
-          } else if (selectedFile.file_url && selectedFile.file_url.startsWith("indexeddb://")) {
-            const blobId = selectedFile.file_url.replace("indexeddb://", "");
-            const url = await LocalBlobDB.getBlobUrl(blobId);
-            setResolvedPreviewUrl(url);
-          } else {
-            setResolvedPreviewUrl(selectedFile.file_url);
-          }
-        }
-        resolveUrl();
-      }, [selectedFile]);
-
-      // Fetch Folder Structure & File Metadata from Supabase DB (or Local Cache)
-      async function loadItemsFromCloudOrCache() {
-        const cached = localStorage.getItem("wincloud_explorer_items");
-        if (cached) {
-          setItems(JSON.parse(cached));
-        } else {
-          setItems(STARTER_ITEMS);
-          localStorage.setItem("wincloud_explorer_items", JSON.stringify(STARTER_ITEMS));
-        }
-
-        if (!supabase) {
-          setCloudStatus("Local IndexedDB Mode (Add Supabase Keys for Global Cloud)");
-          return;
-        }
-
-        try {
-          setCloudStatus("Syncing with Supabase Cloud...");
-          const { data, error } = await supabase
-            .from("drive_items")
-            .select("*")
-            .order("name", { ascending: true });
-
-          if (error) throw error;
-
-          if (data && data.length > 0) {
-            setItems(data);
-            localStorage.setItem("wincloud_explorer_items", JSON.stringify(data));
-          } else if (data && data.length === 0) {
-            // Seed starter folders if cloud database is empty
-            await supabase.from("drive_items").upsert(STARTER_ITEMS);
-            setItems(STARTER_ITEMS);
-          }
-          setCloudStatus("Supabase Cloud Connected");
-        } catch (err) {
-          console.warn("Supabase sync fallback:", err.message);
-          setCloudStatus("Offline Cache (Verify Supabase Table)");
-        }
-      }
-
-      // Toggle Dark / Light Mode
-      function toggleTheme() {
-        const root = document.documentElement;
-        if (isDark) {
-          root.classList.remove("dark");
-          setIsDark(false);
-        } else {
-          root.classList.add("dark");
-          setIsDark(true);
-        }
-      }
-
-      // Admin Login Handler
-      function handleAdminToggle() {
-        if (isAdmin) {
-          setIsAdmin(false);
-          return;
-        }
-        const entered = prompt("Enter Admin Password to upload files & manage folders (Default: saidul123):");
-        if (entered === null) return;
-        if (entered === config.adminPass) {
-          setIsAdmin(true);
-        } else {
-          alert("Incorrect Admin Password!");
-        }
-      }
-
-      // Create New Subfolder
-      async function handleCreateFolder(e) {
-        e.preventDefault();
-        if (!newFolderName.trim()) return;
-
-        const folderObj = {
-          id: "fld-" + Date.now(),
-          parent_id: currentFolderId,
-          type: "folder",
-          name: newFolderName.trim(),
-          size_bytes: 0,
-          created_at: new Date().toISOString().split("T")[0]
-        };
-
-        const updated = [...items, folderObj];
-        setItems(updated);
-        localStorage.setItem("wincloud_explorer_items", JSON.stringify(updated));
-        setNewFolderName("");
-        setShowFolderModal(false);
-
-        if (currentFolderId) {
-          setExpandedFolders(prev => new Set([...prev, currentFolderId]));
-        }
-
-        if (supabase) {
-          const { error } = await supabase.from("drive_items").upsert([folderObj]);
-          if (error) alert("Cloud DB Error: " + error.message);
-        }
-      }
-
-      // Upload Real Files (.pdf, .docx, .png, .zip, etc.) to Cloud Storage + DB
-      async function handleFileUpload(fileList) {
-        if (!isAdmin) {
-          alert("Please unlock Admin Mode at the top-right to upload files.");
-          return;
-        }
-        const filesArray = Array.from(fileList || []);
-        if (filesArray.length === 0) return;
-
-        setIsUploading(true);
-        const newlyCreatedItems = [];
-
-        for (let i = 0; i < filesArray.length; i++) {
-          const file = filesArray[i];
-          setUploadProgressText(`Uploading (${i + 1}/${filesArray.length}): ${file.name}...`);
-
-          const ext = (file.name.split(".").pop() || "").toLowerCase();
-          const itemId = "file-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7);
-          const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-          const storagePath = `${currentFolderId || "root"}/${itemId}_${safeFileName}`;
-
-          let publicFileUrl = "";
-
-          if (supabase) {
-            // 1. Upload actual binary file to Supabase Storage Bucket
-            const { error: uploadError } = await supabase.storage
-              .from(config.bucketName)
-              .upload(storagePath, file, {
-                cacheControl: "3600",
-                upsert: true,
-                contentType: file.type || "application/octet-stream"
-              });
-
-            if (uploadError) {
-              alert(`Supabase Storage Upload Failed for ${file.name}: ${uploadError.message}`);
-              continue;
-            }
-
-            // 2. Get global public URL for viewing & downloading
-            const { data: urlData } = supabase.storage
-              .from(config.bucketName)
-              .getPublicUrl(storagePath);
-
-            publicFileUrl = urlData.publicUrl;
-          } else {
-            // Fallback: Save binary file inside local IndexedDB if Supabase isn't configured yet
-            await LocalBlobDB.saveBlob(itemId, file);
-            publicFileUrl = `indexeddb://${itemId}`;
-          }
-
-          const fileRecord = {
-            id: itemId,
-            parent_id: currentFolderId,
-            type: "file",
-            name: file.name,
-            file_ext: ext,
-            mime_type: file.type || "application/octet-stream",
-            size_bytes: file.size,
-            file_url: publicFileUrl,
-            storage_path: storagePath,
-            created_at: new Date().toISOString().split("T")[0]
-          };
-
-          newlyCreatedItems.push(fileRecord);
-
-          // 3. Save metadata record to Supabase Database
-          if (supabase) {
-            await supabase.from("drive_items").upsert([fileRecord]);
-          }
-        }
-
-        const updatedAll = [...items, ...newlyCreatedItems];
-        setItems(updatedAll);
-        localStorage.setItem("wincloud_explorer_items", JSON.stringify(updatedAll));
-        setIsUploading(false);
-        setUploadProgressText("");
-        if (newlyCreatedItems.length === 1) {
-          setSelectedFile(newlyCreatedItems[0]);
-        }
-      }
-
-      // Rename Folder or File
-      async function handleRenameItem(e, item) {
-        e.stopPropagation();
-        if (!isAdmin) return;
-        const updatedName = prompt("Rename item:", item.name);
-        if (!updatedName || !updatedName.trim()) return;
-
-        const updatedItem = { ...item, name: updatedName.trim() };
-        const updatedList = items.map(i => (i.id === item.id ? updatedItem : i));
-        setItems(updatedList);
-        localStorage.setItem("wincloud_explorer_items", JSON.stringify(updatedList));
-        if (selectedFile && selectedFile.id === item.id) setSelectedFile(updatedItem);
-
-        if (supabase) {
-          await supabase.from("drive_items").update({ name: updatedItem.name }).eq("id", item.id);
-        }
-      }
-
-      // Delete Folder (and nested children) or File
-      async function handleDeleteItem(e, item) {
-        e.stopPropagation();
-        if (!isAdmin) return;
-        if (!confirm(`Permanently delete "${item.name}"?`)) return;
-
-        const idsToRemove = [item.id];
-        const storagePathsToDelete = item.storage_path ? [item.storage_path] : [];
-
-        const collectDescendants = parentId => {
-          items
-            .filter(x => x.parent_id === parentId)
-            .forEach(child => {
-              idsToRemove.push(child.id);
-              if (child.storage_path) storagePathsToDelete.push(child.storage_path);
-              if (child.type === "folder") collectDescendants(child.id);
-            });
-        };
-        if (item.type === "folder") collectDescendants(item.id);
-
-        const remaining = items.filter(i => !idsToRemove.includes(i.id));
-        setItems(remaining);
-        localStorage.setItem("wincloud_explorer_items", JSON.stringify(remaining));
-
-        if (selectedFile && idsToRemove.includes(selectedFile.id)) {
-          setSelectedFile(null);
-        }
-
-        if (supabase) {
-          if (storagePathsToDelete.length > 0) {
-            await supabase.storage.from(config.bucketName).remove(storagePathsToDelete);
-          }
-          await supabase.from("drive_items").delete().in("id", idsToRemove);
-        }
-      }
-
-      // Force Instant Browser File Download (.pdf, .docx, images, etc.)
-      async function triggerInstantDownload(fileItem, e) {
-        if (e) e.stopPropagation();
-        try {
-          let downloadHref = fileItem.file_url;
-
-          if (fileItem.file_url === "local-sample-pdf-1") {
-            const blob = createSamplePdfBlob(
-              "Chapter 7: Control and Coordination",
-              "Class X Biology - Synaptic Chemical Transmission & Reflex Arcs"
-            );
-            downloadHref = URL.createObjectURL(blob);
-          } else if (fileItem.file_url === "local-sample-pdf-2") {
-            const blob = createSamplePdfBlob(
-              "Chapter 1: Indian Freedom Movement",
-              "Class X History - Key Timeline & National Movement Notes"
-            );
-            downloadHref = URL.createObjectURL(blob);
-          } else if (fileItem.file_url && fileItem.file_url.startsWith("indexeddb://")) {
-            const blobId = fileItem.file_url.replace("indexeddb://", "");
-            downloadHref = await LocalBlobDB.getBlobUrl(blobId);
-          } else if (fileItem.file_url && fileItem.file_url.startsWith("http")) {
-            // Fetch remote cloud binary as Blob to force direct download instead of new tab
-            const response = await fetch(fileItem.file_url);
-            const blob = await response.blob();
-            downloadHref = URL.createObjectURL(blob);
-          }
-
-          const a = document.createElement("a");
-          a.href = downloadHref;
-          a.download = fileItem.name;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        } catch (err) {
-          // Fallback direct open
-          window.open(fileItem.file_url, "_blank");
-        }
-      }
-
-      // Breadcrumb Path Computation
-      const breadcrumbs = useMemo(() => {
-        const trail = [];
-        let cursor = currentFolderId;
-        while (cursor) {
-          const found = items.find(i => i.id === cursor);
-          if (found) {
-            trail.unshift(found);
-            cursor = found.parent_id;
-          } else {
-            break;
-          }
-        }
-        return trail;
-      }, [currentFolderId, items]);
-
-      // Filtered Explorer Items for Current Directory or Search
-      const visibleItems = useMemo(() => {
-        let list = [];
-        if (searchQuery.trim() !== "") {
-          const q = searchQuery.toLowerCase();
-          list = items.filter(i => i.name.toLowerCase().includes(q));
-        } else {
-          list = items.filter(i => i.parent_id === currentFolderId);
-        }
-
-        if (filterExt !== "ALL") {
-          list = list.filter(i => {
-            if (i.type === "folder") return true;
-            const ext = (i.file_ext || i.name.split(".").pop() || "").toLowerCase();
-            if (filterExt === "PDF") return ext === "pdf";
-            if (filterExt === "DOCX") return ["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(ext);
-            if (filterExt === "MEDIA") return ["png", "jpg", "jpeg", "webp", "gif", "mp4", "mp3"].includes(ext);
-            return true;
-          });
-        }
-
-        return [...list].sort((a, b) =>
-          a.type === b.type ? a.name.localeCompare(b.name) : a.type === "folder" ? -1 : 1
-        );
-      }, [items, currentFolderId, searchQuery, filterExt]);
-
-      // Recursive Sidebar Folder Tree Renderer
-      function renderTreeNodes(parentId = null, depth = 0) {
-        const folders = items
-          .filter(i => i.type === "folder" && i.parent_id === parentId)
-          .sort((a, b) => a.name.localeCompare(b.name));
-
-        return folders.map(folder => {
-          const isExpanded = expandedFolders.has(folder.id);
-          const isActive = currentFolderId === folder.id;
-          const hasSubfolders = items.some(i => i.type === "folder" && i.parent_id === folder.id);
-
-          return (
-            <div key={folder.id}>
-              <div
-                onClick={() => {
-                  setCurrentFolderId(folder.id);
-                  setExpandedFolders(prev => new Set([...prev, folder.id]));
-                  setMobileSidebarOpen(false);
-                }}
-                style={{ paddingLeft: `${depth * 14 + 10}px` }}
-                className={`flex items-center gap-2 py-1.5 pr-2 rounded-lg cursor-pointer text-xs transition ${
-                  isActive
-                    ? "bg-sky-500/20 text-sky-400 font-semibold"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800/60"
-                }`}
-              >
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    setExpandedFolders(prev => {
-                      const next = new Set(prev);
-                      if (next.has(folder.id)) next.delete(folder.id);
-                      else next.add(folder.id);
-                      return next;
-                    });
-                  }}
-                  className="w-4 text-center text-slate-400 hover:text-sky-400"
-                >
-                  {hasSubfolders ? (
-                    <i className={`fa-solid ${isExpanded ? "fa-chevron-down" : "fa-chevron-right"} text-[10px]`}></i>
-                  ) : (
-                    <span className="inline-block w-2"></span>
-                  )}
-                </button>
-                <i className={`fa-solid ${isExpanded ? "fa-folder-open" : "fa-folder"} text-amber-400 text-sm`}></i>
-                <span className="truncate">{folder.name}</span>
-              </div>
-              {isExpanded && renderTreeNodes(folder.id, depth + 1)}
-            </div>
-          );
-        });
-      }
-
-      // Save Cloud Credentials from Modal
-      function handleSaveCloudConfig(e) {
-        e.preventDefault();
-        const cleanConfig = {
-          supabaseUrl: config.supabaseUrl.trim().replace(/\/$/, ""),
-          supabaseKey: config.supabaseKey.trim(),
-          bucketName: config.bucketName.trim() || "cloud-drive",
-          adminPass: config.adminPass.trim() || "saidul123"
-        };
-        setConfig(cleanConfig);
-        localStorage.setItem("wincloud_explorer_cfg", JSON.stringify(cleanConfig));
-        setShowCloudModal(false);
-      }
-
-      return (
-        <div
-          className="h-screen w-screen flex flex-col bg-slate-100 dark:bg-[#0b0f19] text-slate-800 dark:text-slate-100"
-          onDragOver={e => e.preventDefault()}
-          onDrop={e => {
-            e.preventDefault();
-            if (isAdmin && e.dataTransfer.files.length > 0) {
-              handleFileUpload(e.dataTransfer.files);
-            }
-          }}
-        >
-          {/* ================= 1. WINDOWS 11 TOP TITLE BAR ================= */}
-          <header className="h-11 bg-slate-200/90 dark:bg-[#111827] border-b border-slate-300 dark:border-slate-800 px-3 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2.5">
-              <button
-                onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-                className="md:hidden p-1.5 rounded hover:bg-slate-300 dark:hover:bg-slate-800"
-              >
-                <i className="fa-solid fa-bars text-sm"></i>
-              </button>
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white shadow">
-                <i className="fa-solid fa-folder-open text-xs"></i>
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold tracking-wide">WinCloud File Explorer</span>
-                  <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    {cloudStatus}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span
-                className={`text-xs px-2.5 py-1 rounded-md flex items-center gap-1.5 font-medium ${
-                  isAdmin
-                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                    : "bg-slate-300/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                }`}
-              >
-                <i className={`fa-solid ${isAdmin ? "fa-shield-halved" : "fa-globe"} text-[11px]`}></i>
-                <span className="hidden sm:inline">{isAdmin ? "Admin Uploader" : "Public Reader"}</span>
-              </span>
-
-              <button
-                onClick={handleAdminToggle}
-                className="text-xs px-3 py-1 rounded-md bg-sky-600 hover:bg-sky-500 text-white font-medium transition flex items-center gap-1.5 shadow-sm"
-              >
-                <i className={`fa-solid ${isAdmin ? "fa-lock-open" : "fa-lock"} text-[11px]`}></i>
-                <span>{isAdmin ? "Exit Admin" : "Admin Login"}</span>
-              </button>
-
-              <button
-                onClick={() => setShowCloudModal(true)}
-                title="Configure Supabase Storage & Database"
-                className="p-1.5 rounded-md hover:bg-slate-300 dark:hover:bg-slate-800 text-sky-400 transition"
-              >
-                <i className="fa-solid fa-cloud-arrow-up text-sm"></i>
-              </button>
-
-              <button
-                onClick={toggleTheme}
-                title="Switch Dark / Light Theme"
-                className="p-1.5 rounded-md hover:bg-slate-300 dark:hover:bg-slate-800 text-amber-400 transition"
-              >
-                <i className={`fa-solid ${isDark ? "fa-sun" : "fa-moon text-slate-700"} text-sm`}></i>
-              </button>
-            </div>
-          </header>
-
-          {/* ================= 2. WINDOWS 11 ACTION RIBBON ================= */}
-          <div className="h-12 bg-white dark:bg-[#151e31] border-b border-slate-200 dark:border-slate-800/90 px-3 flex items-center justify-between gap-2 shrink-0 overflow-x-auto">
-            <div className="flex items-center gap-2">
-              {isAdmin ? (
-                <>
-                  <button
-                    onClick={() => setShowFolderModal(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-500 dark:text-amber-400 border border-amber-500/30 text-xs font-semibold transition"
-                  >
-                    <i className="fa-solid fa-folder-plus"></i>
-                    <span>+ New Folder</span>
-                  </button>
-
-                  <button
-                    onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                    disabled={isUploading}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-sm transition disabled:opacity-50"
-                  >
-                    <i className="fa-solid fa-cloud-arrow-up"></i>
-                    <span>{isUploading ? uploadProgressText : "Upload Files (.pdf, .docx, etc.)"}</span>
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.gif,.mp4,.mp3,.zip,.txt,.md"
-                    className="hidden"
-                    onChange={e => handleFileUpload(e.target.files)}
-                  />
-                </>
-              ) : (
-                <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                  <i className="fa-solid fa-circle-info text-sky-400"></i>
-                  <span>Browse folders, preview PDFs/Docs in-browser, or click Download on any file.</span>
-                </div>
-              )}
-
-              <button
-                onClick={loadItemsFromCloudOrCache}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-xs text-slate-500 dark:text-slate-300 transition"
-                title="Refresh files from Cloud"
-              >
-                <i className="fa-solid fa-arrows-rotate text-sky-400"></i>
-                <span className="hidden md:inline">Refresh</span>
-              </button>
-            </div>
-
-            {/* File Type Filter & Grid/Details View Toggle */}
-            <div className="flex items-center gap-2">
-              <select
-                value={filterExt}
-                onChange={e => setFilterExt(e.target.value)}
-                className="bg-slate-100 dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-sky-500"
-              >
-                <option value="ALL">All File Types</option>
-                <option value="PDF">PDF Documents (.pdf)</option>
-                <option value="DOCX">Office Docs (.docx, .pptx, .xlsx)</option>
-                <option value="MEDIA">Images & Media</option>
-              </select>
-
-              <div className="flex items-center bg-slate-200/70 dark:bg-[#0b0f19] p-1 rounded-lg border border-slate-300 dark:border-slate-800">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`px-2.5 py-1 rounded text-xs font-medium transition ${
-                    viewMode === "grid"
-                      ? "bg-white dark:bg-slate-800 text-sky-400 shadow-sm"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <i className="fa-solid fa-grip mr-1"></i>Icons
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`px-2.5 py-1 rounded text-xs font-medium transition ${
-                    viewMode === "list"
-                      ? "bg-white dark:bg-slate-800 text-sky-400 shadow-sm"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <i className="fa-solid fa-list mr-1"></i>Details
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* ================= 3. WINDOWS ADDRESS BAR & SEARCH ================= */}
-          <div className="h-11 bg-slate-100 dark:bg-[#111827] border-b border-slate-200 dark:border-slate-800 px-3 flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => {
-                  if (!currentFolderId) return;
-                  const curr = items.find(i => i.id === currentFolderId);
-                  setCurrentFolderId(curr ? curr.parent_id : null);
-                }}
-                disabled={!currentFolderId}
-                className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 transition"
-                title="Up one folder level"
-              >
-                <i className="fa-solid fa-arrow-up text-xs"></i>
-              </button>
-              <button
-                onClick={() => setCurrentFolderId(null)}
-                className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition"
-                title="Go to Root Drive"
-              >
-                <i className="fa-solid fa-house text-xs text-sky-400"></i>
-              </button>
-            </div>
-
-            {/* Interactive Breadcrumbs */}
-            <div className="flex-1 h-8 bg-white dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-800 rounded-lg px-2.5 flex items-center overflow-x-auto text-xs gap-1">
-              <button
-                onClick={() => setCurrentFolderId(null)}
-                className="px-2 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 font-semibold text-sky-400 flex items-center gap-1.5 shrink-0"
-              >
-                <i className="fa-solid fa-hard-drive"></i>
-                <span>Cloud Drive (C:)</span>
-              </button>
-              {breadcrumbs.map(folder => (
-                <React.Fragment key={folder.id}>
-                  <i className="fa-solid fa-chevron-right text-[10px] text-slate-500 shrink-0"></i>
-                  <button
-                    onClick={() => setCurrentFolderId(folder.id)}
-                    className="px-2 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 font-medium truncate max-w-[160px] shrink-0"
-                  >
-                    {folder.name}
-                  </button>
-                </React.Fragment>
-              ))}
-            </div>
-
-            {/* Instant Search Box */}
-            <div className="relative w-44 sm:w-64">
-              <i className="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search .pdf, .docx, folders..."
-                className="w-full h-8 pl-8 pr-7 bg-white dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-800 rounded-lg text-xs focus:outline-none focus:border-sky-500"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
-                >
-                  <i className="fa-solid fa-xmark text-xs"></i>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* ================= 4. MAIN SPLIT WORKSPACE ================= */}
-          <div className="flex-1 flex overflow-hidden relative">
-            {/* LEFT SIDEBAR: DIRECTORY TREE */}
-            <aside
-              className={`w-64 bg-slate-50 dark:bg-[#0e1525] border-r border-slate-200 dark:border-slate-800/90 flex flex-col shrink-0 z-20 fixed md:static inset-y-0 left-0 transform transition-transform duration-200 ${
-                mobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-              }`}
-            >
-              <div className="px-3 py-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Directory Tree</span>
-                <button
-                  onClick={() =>
-                    setExpandedFolders(new Set(items.filter(i => i.type === "folder").map(f => f.id)))
-                  }
-                  className="text-[11px] text-sky-400 hover:underline"
-                >
-                  Expand All
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-                <div
-                  onClick={() => {
-                    setCurrentFolderId(null);
-                    setMobileSidebarOpen(false);
-                  }}
-                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs transition ${
-                    currentFolderId === null
-                      ? "bg-sky-500/20 text-sky-400 font-semibold"
-                      : "hover:bg-slate-200/70 dark:hover:bg-slate-800/60"
-                  }`}
-                >
-                  <i className="fa-solid fa-cloud text-sky-400"></i>
-                  <span>Cloud Drive (Root)</span>
-                </div>
-                {renderTreeNodes(null, 0)}
-              </div>
-            </aside>
-
-            {/* CENTER: FILE & FOLDER EXPLORER */}
-            <main className="flex-1 flex flex-col md:flex-row overflow-hidden bg-white dark:bg-[#0b0f19]">
-              <section className="flex-1 overflow-y-auto p-4">
-                {isAdmin && (
-                  <div
-                    onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                    className="mb-4 border border-dashed border-sky-500/40 bg-sky-500/5 hover:bg-sky-500/10 rounded-xl p-3 flex items-center justify-between cursor-pointer transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center">
-                        <i className="fa-solid fa-file-arrow-up"></i>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold">Admin Quick Dropzone — Drag & drop files anywhere or click to upload</p>
-                        <p className="text-[11px] text-slate-400">Supports .PDF, .DOCX, .PPTX, .XLSX, Images, Video, and .ZIP into the current folder</p>
-                      </div>
-                    </div>
-                    <span className="text-xs px-3 py-1 rounded-md bg-sky-600 text-white font-medium shrink-0">Browse Files</span>
-                  </div>
-                )}
-
-                {/* Empty Folder State */}
-                {visibleItems.length === 0 ? (
-                  <div className="border border-dashed border-slate-300 dark:border-slate-800 rounded-2xl p-12 text-center my-6">
-                    <i className="fa-solid fa-folder-open text-4xl text-slate-400 mb-3"></i>
-                    <p className="text-sm font-semibold">This folder is empty</p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {isAdmin
-                        ? "Use '+ New Folder' or 'Upload Files' above to add PDFs, Word documents, or subfolders."
-                        : "Switch to Admin Login at the top-right to upload files into this directory."}
-                    </p>
-                  </div>
-                ) : viewMode === "grid" ? (
-                  /* WINDOWS 11 LARGE ICONS GRID VIEW */
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                    {visibleItems.map(item => {
-                      const vis = getFileVisuals(item);
-                      const isSelected = selectedFile && selectedFile.id === item.id;
-                      const childCount =
-                        item.type === "folder" ? items.filter(x => x.parent_id === item.id).length : 0;
-
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={() => {
-                            if (item.type === "folder") {
-                              setCurrentFolderId(item.id);
-                              setExpandedFolders(prev => new Set([...prev, item.id]));
-                            } else {
-                              setSelectedFile(item);
-                            }
-                          }}
-                          className={`group relative p-3.5 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
-                            isSelected
-                              ? "border-sky-500 bg-sky-500/10"
-                              : "border-slate-200/90 dark:border-slate-800/90 bg-slate-50/70 dark:bg-[#111827] hover:border-sky-500/40 hover:bg-sky-500/5"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className={`w-11 h-11 rounded-xl ${vis.bg} ${vis.color} flex items-center justify-center`}>
-                              <i className={`fa-solid ${vis.icon} text-2xl`}></i>
-                            </div>
-
-                            <div className="flex items-center gap-1">
-                              {item.type === "file" && (
-                                <button
-                                  onClick={e => triggerInstantDownload(item, e)}
-                                  title="Download File"
-                                  className="p-1.5 rounded-lg bg-slate-200/80 dark:bg-slate-800 hover:bg-sky-600 hover:text-white text-slate-500 dark:text-slate-300 text-xs transition"
-                                >
-                                  <i className="fa-solid fa-download"></i>
-                                </button>
-                              )}
-                              {isAdmin && (
-                                <>
-                                  <button
-                                    onClick={e => handleRenameItem(e, item)}
-                                    title="Rename"
-                                    className="p-1.5 rounded-lg bg-slate-200/80 dark:bg-slate-800 hover:bg-amber-500/20 text-slate-400 hover:text-amber-400 text-xs transition"
-                                  >
-                                    <i className="fa-solid fa-pen"></i>
-                                  </button>
-                                  <button
-                                    onClick={e => handleDeleteItem(e, item)}
-                                    title="Delete"
-                                    className="p-1.5 rounded-lg bg-slate-200/80 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 text-xs transition"
-                                  >
-                                    <i className="fa-solid fa-trash"></i>
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="mt-3">
-                            <h4 className="text-xs font-semibold truncate group-hover:text-sky-400 transition" title={item.name}>
-                              {item.name}
-                            </h4>
-                            <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1">
-                              <span>{item.type === "folder" ? `${childCount} items` : vis.label}</span>
-                              <span>{item.type === "file" ? formatBytes(item.size_bytes) : item.created_at}</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  /* WINDOWS 11 DETAILS TABLE VIEW */
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-100 dark:bg-[#121a2d] text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                        <tr>
-                          <th className="py-2.5 px-3">Name</th>
-                          <th className="py-2.5 px-3 hidden sm:table-cell">Type</th>
-                          <th className="py-2.5 px-3 hidden md:table-cell">Size</th>
-                          <th className="py-2.5 px-3 hidden lg:table-cell">Date Uploaded</th>
-                          <th className="py-2.5 px-3 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800/70">
-                        {visibleItems.map(item => {
-                          const vis = getFileVisuals(item);
-                          return (
-                            <tr
-                              key={item.id}
-                              onClick={() =>
-                                item.type === "folder" ? setCurrentFolderId(item.id) : setSelectedFile(item)
-                              }
-                              className="hover:bg-sky-500/10 cursor-pointer transition"
-                            >
-                              <td className="py-2.5 px-3 font-medium flex items-center gap-2.5">
-                                <i className={`fa-solid ${vis.icon} ${vis.color} text-base w-5 text-center`}></i>
-                                <span className="truncate max-w-xs sm:max-w-md">{item.name}</span>
-                              </td>
-                              <td className="py-2.5 px-3 text-slate-400 hidden sm:table-cell">{vis.label}</td>
-                              <td className="py-2.5 px-3 text-slate-400 hidden md:table-cell">
-                                {item.type === "file" ? formatBytes(item.size_bytes) : "—"}
-                              </td>
-                              <td className="py-2.5 px-3 text-slate-400 hidden lg:table-cell">{item.created_at}</td>
-                              <td className="py-2.5 px-3 text-right space-x-1">
-                                {item.type === "file" && (
-                                  <button
-                                    onClick={e => triggerInstantDownload(item, e)}
-                                    className="px-2.5 py-1 rounded bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-medium"
-                                  >
-                                    <i className="fa-solid fa-download mr-1"></i>Download
-                                  </button>
-                                )}
-                                {isAdmin && (
-                                  <button
-                                    onClick={e => handleDeleteItem(e, item)}
-                                    className="px-2 py-1 rounded bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 text-[11px]"
-                                  >
-                                    <i className="fa-solid fa-trash"></i>
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </section>
-
-              {/* ================= RIGHT PANE: UNIVERSAL FILE PREVIEWER & DOWNLOADER ================= */}
-              {selectedFile && (
-                <section className="w-full md:w-[48%] lg:w-[52%] border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#101726] flex flex-col h-full shrink-0">
-                  {/* Preview Top Bar */}
-                  <div className="h-12 px-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 bg-white dark:bg-[#141d30] shrink-0">
-                    <div className="flex items-center gap-2.5 truncate">
-                      <i className={`fa-solid ${getFileVisuals(selectedFile).icon} ${getFileVisuals(selectedFile).color} text-lg`}></i>
-                      <div className="truncate">
-                        <h3 className="text-xs font-bold truncate">{selectedFile.name}</h3>
-                        <p className="text-[10px] text-slate-400">
-                          {formatBytes(selectedFile.size_bytes)} • {getFileVisuals(selectedFile).label}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        onClick={e => triggerInstantDownload(selectedFile, e)}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition"
-                      >
-                        <i className="fa-solid fa-download"></i>
-                        <span>Download</span>
-                      </button>
-                      <button
-                        onClick={() => setSelectedFile(null)}
-                        className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"
-                        title="Close Preview"
-                      >
-                        <i className="fa-solid fa-xmark text-sm"></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Dynamic File Preview Body */}
-                  <div className="flex-1 overflow-hidden flex flex-col bg-slate-900/95">
-                    {(() => {
-                      const ext = (selectedFile.file_ext || selectedFile.name.split(".").pop() || "").toLowerCase();
-
-                      // 1. PDF Live Embedded Viewer
-                      if (ext === "pdf" && resolvedPreviewUrl) {
-                        return (
-                          <iframe
-                            src={resolvedPreviewUrl}
-                            title={selectedFile.name}
-                            className="w-full h-full border-0 bg-white"
-                          />
-                        );
-                      }
-
-                      // 2. Office Documents (.docx, .pptx, .xlsx) via Microsoft Office Online Viewer
-                      if (["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(ext)) {
-                        const isPublicHttp =
-                          resolvedPreviewUrl &&
-                          resolvedPreviewUrl.startsWith("http") &&
-                          !resolvedPreviewUrl.includes("localhost");
-
-                        if (isPublicHttp) {
-                          const officeEmbedUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-                            resolvedPreviewUrl
-                          )}`;
-                          return (
-                            <iframe
-                              src={officeEmbedUrl}
-                              title={selectedFile.name}
-                              className="w-full h-full border-0 bg-white"
-                            />
-                          );
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NexusChat — Real-Time Community Hub</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
                         }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Custom Scrollbar for clean Windows & Mobile look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.3);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.5);
+        }
+        .message-enter {
+            animation: slideUp 0.2s ease-out forwards;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased h-[100dvh] w-screen overflow-hidden flex flex-col select-none">
 
-                        return (
-                          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                            <div className="w-16 h-16 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-4">
-                              <i className="fa-solid fa-file-word text-3xl"></i>
-                            </div>
-                            <h4 className="text-sm font-bold text-white">{selectedFile.name}</h4>
-                            <p className="text-xs text-slate-400 max-w-md mt-2 leading-relaxed">
-                              This Office document ({formatBytes(selectedFile.size_bytes)}) is ready for download. Once connected to your Supabase Storage bucket, live Microsoft Office in-browser rendering activates automatically for public URLs.
-                            </p>
-                            <button
-                              onClick={e => triggerInstantDownload(selectedFile, e)}
-                              className="mt-5 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-lg flex items-center gap-2"
-                            >
-                              <i className="fa-solid fa-download"></i>
-                              <span>Download {selectedFile.name}</span>
-                            </button>
-                          </div>
-                        );
-                      }
-
-                      // 3. Images (.png, .jpg, .jpeg, .webp, .gif, .svg)
-                      if (["png", "jpg", "jpeg", "webp", "gif", "svg"].includes(ext) && resolvedPreviewUrl) {
-                        return (
-                          <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
-                            <img
-                              src={resolvedPreviewUrl}
-                              alt={selectedFile.name}
-                              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                            />
-                          </div>
-                        );
-                      }
-
-                      // 4. Video / Audio Media
-                      if (["mp4", "webm"].includes(ext) && resolvedPreviewUrl) {
-                        return (
-                          <div className="flex-1 flex items-center justify-center p-4">
-                            <video src={resolvedPreviewUrl} controls className="max-w-full max-h-full rounded-lg" />
-                          </div>
-                        );
-                      }
-                      if (["mp3", "wav"].includes(ext) && resolvedPreviewUrl) {
-                        return (
-                          <div className="flex-1 flex items-center justify-center p-8">
-                            <audio src={resolvedPreviewUrl} controls className="w-full max-w-md" />
-                          </div>
-                        );
-                      }
-
-                      // 5. Fallback Universal Download Card
-                      return (
-                        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                          <i className={`fa-solid ${getFileVisuals(selectedFile).icon} ${getFileVisuals(selectedFile).color} text-5xl mb-4`}></i>
-                          <h4 className="text-sm font-bold text-white">{selectedFile.name}</h4>
-                          <p className="text-xs text-slate-400 mt-1">{formatBytes(selectedFile.size_bytes)}</p>
-                          <button
-                            onClick={e => triggerInstantDownload(selectedFile, e)}
-                            className="mt-5 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold"
-                          >
-                            <i className="fa-solid fa-download mr-2"></i>Download File
-                          </button>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </section>
-              )}
-            </main>
-          </div>
-
-          {/* ================= 5. WINDOWS 11 STATUS FOOTER ================= */}
-          <footer className="h-7 bg-slate-200 dark:bg-[#0e1422] border-t border-slate-300 dark:border-slate-800 px-3 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
-            <div className="flex items-center gap-4">
-              <span>{visibleItems.length} item(s)</span>
-              <span>
-                Total Folder Size:{" "}
-                {formatBytes(visibleItems.reduce((acc, cur) => acc + (cur.size_bytes || 0), 0))}
-              </span>
-            </div>
-            <div>
-              <span>Engine: Supabase Storage + PostgreSQL</span>
-            </div>
-          </footer>
-
-          {/* ================= MODAL: CREATE NEW FOLDER ================= */}
-          {showFolderModal && (
-            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-              <form
-                onSubmit={handleCreateFolder}
-                className="bg-white dark:bg-[#141d30] border border-slate-200 dark:border-slate-700 rounded-xl max-w-md w-full p-5 shadow-2xl space-y-4"
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold flex items-center gap-2">
-                    <i className="fa-solid fa-folder-plus text-amber-400"></i>
-                    <span>Create New Folder</span>
-                  </h3>
-                  <button type="button" onClick={() => setShowFolderModal(false)} className="text-slate-400 hover:text-white">
-                    <i className="fa-solid fa-xmark"></i>
-                  </button>
+    <!-- Top Navigation Bar (Mobile & Desktop) -->
+    <header class="h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between z-30 shrink-0">
+        <div class="flex items-center gap-3">
+            <!-- Mobile Sidebar Toggle -->
+            <button id="mobileMenuBtn" class="md:hidden p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-bolt text-lg"></i>
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400 block mb-1">Folder Name</label>
-                  <input
-                    type="text"
-                    required
-                    autoFocus
-                    value={newFolderName}
-                    onChange={e => setNewFolderName(e.target.value)}
-                    placeholder="e.g., Chapter 2 - Acids, Bases and Salts"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowFolderModal(false)}
-                    className="px-3.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs"
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="px-4 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold">
-                    Create Folder
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* ================= MODAL: SUPABASE CLOUD STORAGE CONFIG ================= */}
-          {showCloudModal && (
-            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-              <form
-                onSubmit={handleSaveCloudConfig}
-                className="bg-white dark:bg-[#141d30] border border-slate-200 dark:border-slate-700 rounded-xl max-w-lg w-full p-5 shadow-2xl space-y-4"
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold flex items-center gap-2">
-                    <i className="fa-solid fa-cloud-arrow-up text-sky-400"></i>
-                    <span>Supabase Cloud Storage & Database Settings</span>
-                  </h3>
-                  <button type="button" onClick={() => setShowCloudModal(false)} className="text-slate-400 hover:text-white">
-                    <i className="fa-solid fa-xmark"></i>
-                  </button>
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  <div>
-                    <label className="font-medium text-slate-300 block mb-1">Supabase Project URL</label>
-                    <input
-                      type="text"
-                      value={config.supabaseUrl}
-                      onChange={e => setConfig({ ...config, supabaseUrl: e.target.value })}
-                      placeholder="https://your-project.supabase.co"
-                      className="w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-medium text-slate-300 block mb-1">Supabase Anon Public Key</label>
-                    <input
-                      type="password"
-                      value={config.supabaseKey}
-                      onChange={e => setConfig({ ...config, supabaseKey: e.target.value })}
-                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                      className="w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="font-medium text-slate-300 block mb-1">Storage Bucket Name</label>
-                      <input
-                        type="text"
-                        value={config.bucketName}
-                        onChange={e => setConfig({ ...config, bucketName: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700"
-                      />
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-bold text-base sm:text-lg tracking-tight">NexusChat</h1>
+                        <span id="connectionBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span id="connectionText">Connecting...</span>
+                        </span>
                     </div>
-                    <div>
-                      <label className="font-medium text-slate-300 block mb-1">Admin Password</label>
-                      <input
-                        type="password"
-                        value={config.adminPass}
-                        onChange={e => setConfig({ ...config, adminPass: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#0b0f19] border border-slate-300 dark:border-slate-700"
-                      />
-                    </div>
-                  </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Fast, clean real-time developer & student community</p>
                 </div>
-
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowCloudModal(false)}
-                    className="px-3.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs"
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold">
-                    Save & Connect Cloud
-                  </button>
-                </div>
-              </form>
             </div>
-          )}
         </div>
-      );
-    }
 
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<WinCloudExplorerApp />);
-  </script>
+        <!-- Right Controls -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Copy Invite / Share Button -->
+            <button id="shareBtn" class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition" title="Copy Room Info">
+                <i class="fa-solid fa-share-nodes"></i>
+                <span>Invite</span>
+            </button>
+
+            <!-- Theme Toggle -->
+            <button id="themeToggleBtn" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition" title="Toggle Dark/Light Theme">
+                <i id="themeIcon" class="fa-solid fa-sun text-amber-400"></i>
+            </button>
+
+            <!-- Current User Profile Pill -->
+            <button id="editProfileBtn" class="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:ring-2 hover:ring-indigo-500/50 transition">
+                <div id="headerAvatar" class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-sm font-bold">
+                    🚀
+                </div>
+                <div class="text-left hidden sm:block">
+                    <div id="headerUsername" class="text-xs font-semibold leading-none">Guest</div>
+                    <div class="text-[10px] text-emerald-500 font-medium mt-0.5">● Online</div>
+                </div>
+                <i class="fa-solid fa-pen text-[10px] text-slate-400 ml-1"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- Mobile Backdrop Overlay -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-20 hidden md:hidden transition-opacity"></div>
+
+        <!-- Left Sidebar (Channels & Active Info) -->
+        <aside id="sidebar" class="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between z-30 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out">
+            
+            <!-- Top Channels Section -->
+            <div class="p-4 space-y-6 overflow-y-auto flex-1">
+                <!-- Mobile Close Header -->
+                <div class="flex items-center justify-between md:hidden pb-2 border-b border-slate-200 dark:border-slate-800">
+                    <span class="font-bold text-sm text-slate-500 uppercase tracking-wider">Navigation</span>
+                    <button id="closeSidebarBtn" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Public Chat Rooms -->
+                <div>
+                    <div class="px-2 mb-2 flex items-center justify-between">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Public Rooms</span>
+                        <span class="text-[11px] px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-500 font-medium">Live</span>
+                    </div>
+                    <nav id="roomList" class="space-y-1">
+                        <!-- Populated dynamically via JS -->
+                    </nav>
+                </div>
+
+                <!-- Quick Tips Box -->
+                <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-transparent border border-indigo-500/20 space-y-2">
+                    <div class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-semibold text-xs">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>How It Works</span>
+                    </div>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Messages sync in real-time across users. Open this page in two browser windows or devices to test instant chatting!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Bottom User ID & Status Card -->
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[11px] font-medium text-slate-400 uppercase">Your Unique ID</span>
+                    <button id="copyUidBtn" class="text-[11px] text-indigo-500 hover:underline flex items-center gap-1">
+                        <i class="fa-regular fa-copy"></i> Copy
+                    </button>
+                </div>
+                <div id="fullUserIdDisplay" class="text-[11px] font-mono bg-white dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 break-all select-all">
+                    Authenticating...
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Chat Area -->
+        <main class="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 h-full overflow-hidden">
+            
+            <!-- Active Room Subheader -->
+            <div class="h-14 px-4 sm:px-6 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <span id="activeRoomIcon" class="text-lg">💬</span>
+                    <div class="truncate">
+                        <h2 id="activeRoomTitle" class="font-bold text-sm sm:text-base truncate">General Lounge</h2>
+                        <p id="activeRoomDesc" class="text-xs text-slate-500 dark:text-slate-400 truncate">Hang out, introduce yourself, and chat about anything</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <span id="messageCountBadge" class="text-xs px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
+                        0 messages
+                    </span>
+                </div>
+            </div>
+
+            <!-- Messages Stream Container -->
+            <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 select-text">
+                <!-- Loading State -->
+                <div id="loadingIndicator" class="h-full flex flex-col items-center justify-center text-center py-12">
+                    <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Loading real-time stream...</p>
+                </div>
+            </div>
+
+            <!-- Message Composer Footer -->
+            <div class="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">
+                <!-- Quick Emoji Bar -->
+                <div class="flex items-center gap-1.5 mb-2 overflow-x-auto pb-1 no-scrollbar">
+                    <span class="text-[11px] text-slate-400 mr-1 shrink-0">Quick react:</span>
+                    <button type="button" class="quick-emoji px-2 py-0.5 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">👋</button>
+                    <button type="button" class="quick-emoji px-2 py-0.5 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">🔥</button>
+                    <button type="button" class="quick-emoji px-2 py-0.5 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">🚀</button>
+                    <button type="button" class="quick-emoji px-2 py-0.5 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">💡</button>
+                    <button type="button" class="quick-emoji px-2 py-0.5 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">💻</button>
+                    <button type="button" class="quick-emoji px-2 py-0.5 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">💯</button>
+                    <button type="button" class="quick-emoji px-2 py-0.5 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">🎉</button>
+                </div>
+
+                <form id="chatForm" class="flex items-center gap-2 sm:gap-3">
+                    <div class="relative flex-1">
+                        <input 
+                            id="messageInput" 
+                            type="text" 
+                            maxlength="500"
+                            placeholder="Type a message... (Press Enter to send)" 
+                            autocomplete="off"
+                            class="w-full pl-4 pr-12 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none text-sm transition"
+                        />
+                        <span id="charCount" class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hidden sm:inline">0/500</span>
+                    </div>
+                    <button 
+                        type="submit" 
+                        id="sendBtn"
+                        class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold text-sm flex items-center gap-2 shadow-md shadow-indigo-600/20 transition shrink-0 cursor-pointer"
+                    >
+                        <span class="hidden sm:inline">Send</span>
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Custom Profile Setup Modal -->
+    <div id="profileModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-fade-in">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold">Customize Your Profile</h3>
+                <button id="closeProfileModalBtn" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Display Name</label>
+                    <input 
+                        id="usernameInput" 
+                        type="text" 
+                        maxlength="24" 
+                        placeholder="Enter your name (e.g., Saidul_Dev)" 
+                        class="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 focus:outline-none text-sm"
+                    />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Choose Avatar Badge</label>
+                    <div id="avatarGrid" class="grid grid-cols-6 gap-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button id="cancelProfileBtn" type="button" class="px-4 py-2.5 rounded-xl text-sm font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    Cancel
+                </button>
+                <button id="saveProfileBtn" type="button" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 transition">
+                    Save Profile
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast Notification (No browser alert) -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm font-medium">
+            <i class="fa-solid fa-circle-check text-emerald-400 dark:text-emerald-600"></i>
+            <span id="toastMsg">Notification</span>
+        </div>
+    </div>
+
+    <!-- Application Logic (Firebase Firestore + Seamless Local Broadcast Fallback for GitHub Pages) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==========================================
+        // 1. STATE & CONFIGURATION
+        // ==========================================
+        const ROOMS = [
+            { id: 'general', name: 'General Lounge', icon: '💬', desc: 'Hang out, introduce yourself, and chat about anything' },
+            { id: 'coding', name: 'Coding & Tech', icon: '💻', desc: 'Discuss HTML, JS, Python, projects & GitHub repositories' },
+            { id: 'hustle', name: 'Future & Finance', icon: '🚀', desc: 'Skills, compounding, mindset, and building digital assets' },
+            { id: 'study', name: 'Study Lounge', icon: '📚', desc: 'Homework help, exam prep, and productivity focus' }
+        ];
+
+        const AVATARS = ['🚀', '💻', '⚡', '🔥', '🦁', '🎯', '🧠', '💎', '🤖', '🌟', '🦊', '👑'];
+
+        let currentUser = {
+            uid: 'user-' + Math.random().toString(36).substring(2, 10),
+            name: 'Builder_' + Math.floor(100 + Math.random() * 899),
+            avatar: '🚀'
+        };
+
+        let activeRoomId = 'general';
+        let allMessages = [];
+        let isCloudMode = false;
+        let db = null;
+        let auth = null;
+        let unsubscribeSnapshot = null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'nexus-chat-v1';
+
+        // Local BroadcastChannel for instant multi-tab chatting when deployed statically without Firebase keys
+        const localChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('nexus_realtime_channel') : null;
+
+        // ==========================================
+        // 2. DOM ELEMENTS
+        // ==========================================
+        const roomListEl = document.getElementById('roomList');
+        const activeRoomIconEl = document.getElementById('activeRoomIcon');
+        const activeRoomTitleEl = document.getElementById('activeRoomTitle');
+        const activeRoomDescEl = document.getElementById('activeRoomDesc');
+        const messagesContainerEl = document.getElementById('messagesContainer');
+        const messageCountBadgeEl = document.getElementById('messageCountBadge');
+        const chatFormEl = document.getElementById('chatForm');
+        const messageInputEl = document.getElementById('messageInput');
+        const charCountEl = document.getElementById('charCount');
+        const connectionBadgeEl = document.getElementById('connectionBadge');
+        const connectionTextEl = document.getElementById('connectionText');
+        const fullUserIdDisplayEl = document.getElementById('fullUserIdDisplay');
+        const headerAvatarEl = document.getElementById('headerAvatar');
+        const headerUsernameEl = document.getElementById('headerUsername');
+
+        // Modals & Sidebar
+        const sidebarEl = document.getElementById('sidebar');
+        const sidebarOverlayEl = document.getElementById('sidebarOverlay');
+        const profileModalEl = document.getElementById('profileModal');
+        const usernameInputEl = document.getElementById('usernameInput');
+        const avatarGridEl = document.getElementById('avatarGrid');
+
+        // ==========================================
+        // 3. UI HELPERS & NOTIFICATIONS
+        // ==========================================
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            toastMsg.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2600);
+        }
+
+        function copyTextToClipboard(text, successMsg) {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast(successMsg);
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return 'Just now';
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function updateHeaderProfileUI() {
+            headerAvatarEl.textContent = currentUser.avatar;
+            headerUsernameEl.textContent = currentUser.name;
+            fullUserIdDisplayEl.textContent = currentUser.uid;
+        }
+
+        // ==========================================
+        // 4. RENDER CHANNELS & MESSAGES
+        // ==========================================
+        function renderRooms() {
+            roomListEl.innerHTML = '';
+            ROOMS.forEach(room => {
+                const isActive = room.id === activeRoomId;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition ${
+                    isActive 
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' 
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`;
+                btn.innerHTML = `
+                    <span class="text-base">${room.icon}</span>
+                    <div class="flex-1 truncate">
+                        <div class="font-semibold leading-tight truncate">${room.name}</div>
+                    </div>
+                `;
+                btn.addEventListener('click', () => {
+                    switchRoom(room.id);
+                    closeMobileSidebar();
+                });
+                roomListEl.appendChild(btn);
+            });
+
+            const currentRoom = ROOMS.find(r => r.id === activeRoomId) || ROOMS[0];
+            activeRoomIconEl.textContent = currentRoom.icon;
+            activeRoomTitleEl.textContent = currentRoom.name;
+            activeRoomDescEl.textContent = currentRoom.desc;
+        }
+
+        function switchRoom(roomId) {
+            activeRoomId = roomId;
+            renderRooms();
+            renderMessages();
+        }
+
+        function renderMessages() {
+            // Filter messages for active room and sort chronologically in memory
+            const roomMessages = allMessages
+                .filter(m => (m.roomId || 'general') === activeRoomId)
+                .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+            messageCountBadgeEl.textContent = `${roomMessages.length} ${roomMessages.length === 1 ? 'message' : 'messages'}`;
+            messagesContainerEl.innerHTML = '';
+
+            if (roomMessages.length === 0) {
+                messagesContainerEl.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center py-16 px-4">
+                        <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center text-3xl mb-3">
+                            ${(ROOMS.find(r => r.id === activeRoomId) || ROOMS[0]).icon}
+                        </div>
+                        <h3 class="font-bold text-base mb-1">Welcome to ${(ROOMS.find(r => r.id === activeRoomId) || ROOMS[0]).name}!</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
+                            No messages here yet. Send the first message below to kick off the conversation!
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            roomMessages.forEach(msg => {
+                const isMe = msg.senderId === currentUser.uid;
+                const wrapper = document.createElement('div');
+                wrapper.className = `flex items-end gap-2.5 message-enter ${isMe ? 'flex-row-reverse' : 'flex-row'}`;
+
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = `w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 shadow-xs ${
+                    isMe 
+                        ? 'bg-indigo-600 text-white' 
+                        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
+                }`;
+                avatarDiv.textContent = msg.senderAvatar || '💬';
+
+                const bubbleContainer = document.createElement('div');
+                bubbleContainer.className = `max-w-[78%] sm:max-w-[65%] flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+
+                const metaRow = document.createElement('div');
+                metaRow.className = 'flex items-center gap-1.5 mb-1 px-1';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'text-[11px] font-semibold text-slate-600 dark:text-slate-300';
+                nameSpan.textContent = isMe ? 'You' : (msg.senderName || 'Anonymous');
+
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'text-[10px] text-slate-400';
+                timeSpan.textContent = formatTime(msg.timestamp);
+
+                metaRow.appendChild(nameSpan);
+                metaRow.appendChild(timeSpan);
+
+                const textBubble = document.createElement('div');
+                textBubble.className = `px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words shadow-xs ${
+                    isMe
+                        ? 'bg-indigo-600 text-white rounded-br-xs'
+                        : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800 rounded-bl-xs'
+                }`;
+                textBubble.textContent = msg.text;
+
+                bubbleContainer.appendChild(metaRow);
+                bubbleContainer.appendChild(textBubble);
+
+                wrapper.appendChild(avatarDiv);
+                wrapper.appendChild(bubbleContainer);
+                messagesContainerEl.appendChild(wrapper);
+            });
+
+            // Auto-scroll to bottom
+            messagesContainerEl.scrollTop = messagesContainerEl.scrollHeight;
+        }
+
+        // ==========================================
+        // 5. REAL-TIME ENGINE (CLOUD FIRESTORE + FALLBACK)
+        // ==========================================
+        async function initRealtimeEngine() {
+            const hasEnvConfig = typeof __firebase_config !== 'undefined' && __firebase_config;
+
+            if (hasEnvConfig) {
+                try {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    // RULE 3: Authenticate FIRST before any Firestore queries
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+
+                    onAuthStateChanged(auth, (user) => {
+                        if (!user) return;
+                        currentUser.uid = user.uid;
+                        isCloudMode = true;
+                        updateHeaderProfileUI();
+                        setConnectionStatus('Cloud Live', true);
+                        subscribeToCloudMessages(user);
+                    });
+                    return;
+                } catch (err) {
+                    console.warn("Falling back to Local Multi-Tab Mode:", err);
+                }
+            }
+
+            // Fallback Mode (Works immediately when uploaded to GitHub Pages or opened locally)
+            activateLocalMultiTabMode();
+        }
+
+        function setConnectionStatus(label, isCloud) {
+            connectionTextEl.textContent = label;
+            if (isCloud) {
+                connectionBadgeEl.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+            } else {
+                connectionBadgeEl.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20";
+            }
+        }
+
+        function subscribeToCloudMessages(user) {
+            if (!user || !db) return;
+            // RULE 1 & RULE 2: Strict path & simple collection query
+            const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
+
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+            unsubscribeSnapshot = onSnapshot(
+                messagesCol,
+                (snapshot) => {
+                    const fetched = [];
+                    snapshot.forEach(docSnap => {
+                        fetched.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    allMessages = fetched;
+                    renderMessages();
+                },
+                (error) => {
+                    console.error("Firestore Listener Error:", error);
+                    showToast("Realtime sync error — switched to local mode");
+                    activateLocalMultiTabMode();
+                }
+            );
+        }
+
+        function activateLocalMultiTabMode() {
+            isCloudMode = false;
+            updateHeaderProfileUI();
+            setConnectionStatus('Multi-Tab Live', false);
+
+            // Seed starter welcome messages so the app looks alive immediately
+            const now = Date.now();
+            allMessages = [
+                {
+                    id: 'seed-1',
+                    roomId: 'general',
+                    text: 'Welcome to NexusChat! 🎉 Open this HTML file in two browser tabs to test instant real-time messaging.',
+                    senderId: 'system-bot',
+                    senderName: 'NexusBot',
+                    senderAvatar: '🤖',
+                    timestamp: now - 120000
+                },
+                {
+                    id: 'seed-2',
+                    roomId: 'coding',
+                    text: 'Ready for GitHub upload! You can host this single index.html file on GitHub Pages for free.',
+                    senderId: 'system-bot',
+                    senderName: 'NexusBot',
+                    senderAvatar: '💻',
+                    timestamp: now - 60000
+                },
+                {
+                    id: 'seed-3',
+                    roomId: 'hustle',
+                    text: 'Building high-income coding skills at age 15 is the ultimate compounding advantage. 🚀',
+                    senderId: 'system-bot',
+                    senderName: 'NexusBot',
+                    senderAvatar: '⚡',
+                    timestamp: now - 30000
+                }
+            ];
+
+            renderMessages();
+
+            if (localChannel) {
+                localChannel.onmessage = (event) => {
+                    if (event.data && event.data.type === 'NEW_MESSAGE') {
+                        allMessages.push(event.data.payload);
+                        renderMessages();
+                    }
+                };
+            }
+        }
+
+        // ==========================================
+        // 6. SENDING MESSAGES
+        // ==========================================
+        async function sendMessage(text) {
+            const trimmed = text.trim();
+            if (!trimmed) return;
+
+            const newMsg = {
+                roomId: activeRoomId,
+                text: trimmed,
+                senderId: currentUser.uid,
+                senderName: currentUser.name,
+                senderAvatar: currentUser.avatar,
+                timestamp: Date.now()
+            };
+
+            if (isCloudMode && db && auth?.currentUser) {
+                try {
+                    const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
+                    await addDoc(messagesCol, newMsg);
+                } catch (err) {
+                    console.error("Failed to send cloud message:", err);
+                    showToast("Could not send to cloud");
+                }
+            } else {
+                // Local Broadcast mode
+                const msgWithId = { id: 'local-' + Date.now(), ...newMsg };
+                allMessages.push(msgWithId);
+                renderMessages();
+                if (localChannel) {
+                    localChannel.postMessage({ type: 'NEW_MESSAGE', payload: msgWithId });
+                }
+            }
+        }
+
+        // ==========================================
+        // 7. EVENT LISTENERS & UI INTERACTIONS
+        // ==========================================
+        chatFormEl.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = messageInputEl.value;
+            if (!text.trim()) return;
+            messageInputEl.value = '';
+            charCountEl.textContent = '0/500';
+            sendMessage(text);
+        });
+
+        messageInputEl.addEventListener('input', () => {
+            charCountEl.textContent = `${messageInputEl.value.length}/500`;
+        });
+
+        // Quick Emoji Buttons
+        document.querySelectorAll('.quick-emoji').forEach(btn => {
+            btn.addEventListener('click', () => {
+                messageInputEl.value += btn.textContent;
+                messageInputEl.focus();
+                charCountEl.textContent = `${messageInputEl.value.length}/500`;
+            });
+        });
+
+        // Mobile Sidebar Controls
+        function openMobileSidebar() {
+            sidebarEl.classList.remove('-translate-x-full');
+            sidebarOverlayEl.classList.remove('hidden');
+        }
+        function closeMobileSidebar() {
+            sidebarEl.classList.add('-translate-x-full');
+            sidebarOverlayEl.classList.add('hidden');
+        }
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', openMobileSidebar);
+        document.getElementById('closeSidebarBtn').addEventListener('click', closeMobileSidebar);
+        sidebarOverlayEl.addEventListener('click', closeMobileSidebar);
+
+        // Dark / Light Theme Toggle
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        themeToggleBtn.addEventListener('click', () => {
+            const htmlEl = document.documentElement;
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            themeIcon.className = isDark ? 'fa-solid fa-sun text-amber-400' : 'fa-solid fa-moon text-slate-600';
+        });
+
+        // Profile Customization Modal
+        let selectedAvatarTemp = currentUser.avatar;
+
+        function renderAvatarPicker() {
+            avatarGridEl.innerHTML = '';
+            AVATARS.forEach(emoji => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const isSelected = emoji === selectedAvatarTemp;
+                btn.className = `h-11 rounded-xl text-xl flex items-center justify-center transition ${
+                    isSelected 
+                        ? 'bg-indigo-600 text-white ring-2 ring-indigo-400 scale-105' 
+                        : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`;
+                btn.textContent = emoji;
+                btn.addEventListener('click', () => {
+                    selectedAvatarTemp = emoji;
+                    renderAvatarPicker();
+                });
+                avatarGridEl.appendChild(btn);
+            });
+        }
+
+        function openProfileModal() {
+            usernameInputEl.value = currentUser.name;
+            selectedAvatarTemp = currentUser.avatar;
+            renderAvatarPicker();
+            profileModalEl.classList.remove('hidden');
+            usernameInputEl.focus();
+        }
+
+        function closeProfileModal() {
+            profileModalEl.classList.add('hidden');
+        }
+
+        document.getElementById('editProfileBtn').addEventListener('click', openProfileModal);
+        document.getElementById('closeProfileModalBtn').addEventListener('click', closeProfileModal);
+        document.getElementById('cancelProfileBtn').addEventListener('click', closeProfileModal);
+
+        document.getElementById('saveProfileBtn').addEventListener('click', () => {
+            const newName = usernameInputEl.value.trim();
+            if (newName) {
+                currentUser.name = newName.slice(0, 24);
+            }
+            currentUser.avatar = selectedAvatarTemp;
+            updateHeaderProfileUI();
+            renderMessages();
+            closeProfileModal();
+            showToast('Profile updated!');
+        });
+
+        // Copy UID & Invite Link
+        document.getElementById('copyUidBtn').addEventListener('click', () => {
+            copyTextToClipboard(currentUser.uid, 'User ID copied to clipboard!');
+        });
+
+        document.getElementById('shareBtn').addEventListener('click', () => {
+            copyTextToClipboard(window.location.href, 'Chat link copied! Share it with friends.');
+        });
+
+        // Initialize App on Load
+        window.addEventListener('DOMContentLoaded', () => {
+            renderRooms();
+            updateHeaderProfileUI();
+            initRealtimeEngine();
+        });
+    </script>
 </body>
 </html>
